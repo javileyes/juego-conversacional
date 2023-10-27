@@ -39,6 +39,13 @@ inicio = "ok, let's start!\n"
 # juego de interrogatorio (IA defensiva)
 historico = f"{contexto}<|im_start|>{user}\nI want us to play a roleplay where I am a police officer who interrogate you about why you were at a crime scene. The scene is a pub where there were a few people at the bar: 1 couple and a group of 4 friends and you who were alone. A murderer entered and killed the couple with two shots, then ran away and got on his motorcycle that was parked at the door and fled. The police arrived 10 minutes later and that is where the interrogation begins. I am a police inspector and I want information about what happened and also to verify that you are not a suspect.You are Peter, a medical student who had gone down to the bar to rest after a long day of studying.\n{ai}\n{inicio}"
 
+# crea una class Actor, tiene un atributo "contexto", otro string llamado "sytem_prompt", y otro string llamado "historico".
+class Actor:
+    def __init__(self, system_prompt, contexto, historico):
+        self.system_prompt = system_prompt
+        self.contexto = contexto
+        self.historico = historico   
+
 
 def wrap_text(text, width=90): #preserve_newlines
     # Split the input text into lines based on newline characters
@@ -61,6 +68,14 @@ def find_nth_occurrence(string, substring, n):
             return -1
     return start - 1
 
+# Encuentra la última aparición de una subcadena en una cadena
+def find_last_occurrence(string, substring):
+    return string.rfind(substring)
+
+
+
+
+
 
 def generate_chat(n, ai, user, input_text, system_prompt="",max_additional_tokens=128):
     global historico
@@ -80,6 +95,12 @@ def generate_chat(n, ai, user, input_text, system_prompt="",max_additional_token
     # print("input_length:", input_length)
     # max_length = input_length + max_additional_tokens  # Calcula la longitud máxima de la secuencia de salida
 
+    indice = find_last_occurrence(inputs, f"{user}:")
+    if indice == -1:
+        # print("no se encontro el indice")
+        indice = len(inputs)
+
+    # print("indice:", indice)
     # model_inputs = inputs.to(device)
     model_inputs = inputs
     # model.to(device)
@@ -89,36 +110,19 @@ def generate_chat(n, ai, user, input_text, system_prompt="",max_additional_token
                              )
     text = model_inputs + outputs
 
-    # criterio de parada: cuando el modelo genera un salto de línea
-    # outputs = model.generate(**model_inputs, streamer=streamer,
-    #                             max_length=max_length,
-    #                             temperature=0.1,
-    #                             pad_token_id = 3200,
-    #                             no_repeat_ngram_size=4,
-    #                             eos_token_id=13,
-    #                             do_sample=True)
 
-    # outputs = model.generate(**model_inputs, streamer=streamer,
-    #                          max_length=max_length,
-    #                          temperature=0.1,
-    #                          pad_token_id = 3200,
-    #                          no_repeat_ngram_size=4,
-    #                         #  num_beams=3,
-    #                          do_sample=True)
-    # text = tokenizer.batch_decode(outputs)[0]
-    # historico = text
-    # print("\noutputs:", outputs)
-
-    historico_index = find_nth_occurrence(text, f"{user}:", n) #+ len(f"{user}")+13
+    historico_index = indice
     # print("historico_index:", historico_index)
 
-    inicio_salida_index = find_nth_occurrence(text, f"{ai}:", n) #+ len(f"{ai}")+1
+    inicio_salida_index = text.find(f"{ai}:", indice)
  
     # fin_salida_index igual al siguiente salto de linea
     fin_salida_index = text.find('\n', inicio_salida_index)
 
     if fin_salida_index == -1:
         fin_salida_index = len(text)
+
+    # print(f"historico_index:{historico_index}")
     # print(f"{inicio_salida_index},{fin_salida_index}")
 
     salida = text[inicio_salida_index:fin_salida_index]
@@ -294,8 +298,8 @@ class Game:
                     mode = "DIALOGUE"
                 iteracion += 1
                 salida = generate_chat(iteracion, ai, user, input_text=command,
-         system_prompt=system_prompt,
-         max_additional_tokens=16)
+                                        system_prompt=system_prompt,
+                                        max_additional_tokens=16)
                 # print response
                 print(salida)
 
