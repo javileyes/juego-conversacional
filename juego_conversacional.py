@@ -79,7 +79,7 @@ def find_last_occurrence(string, substring):
 
 
 
-def generate_chat(n, ai, user, input_text, system_prompt="",max_additional_tokens=128):
+def generate_chat(n, ai, user, input_text, system_prompt="",max_additional_tokens=64):
     global historico
 
     if system_prompt != "":
@@ -112,15 +112,27 @@ def generate_chat(n, ai, user, input_text, system_prompt="",max_additional_token
     # model_inputs = inputs.to(device)
     model_inputs = inputs
     # model.to(device)
-    outputs = model(model_inputs,
-                             max_new_tokens=max_additional_tokens,
-                             temperature=0.1
-                             )
-    
+
+    # outputs = model(model_inputs,
+    #                          max_new_tokens=max_additional_tokens,
+    #                          temperature=0.1
+    #                          )
+    outputs = ""
+    # frases_cortas = True
+    contador = 0
+    print(f"{ai}:", end="")
+    for text in model(model_inputs, stream=True):
+
+        print(text, end="", flush=True)
+        outputs += text
+        if text=="\n" or contador > max_additional_tokens and text in ".?!":
+            break
+
+    print("")
     text = model_inputs + outputs
 
 
-    print("outputs:", outputs)
+    # print("outputs:", outputs)
 
     historico_index = indice
     # print("historico_index:", historico_index)
@@ -312,7 +324,7 @@ class Game:
                                         system_prompt=system_prompt,
                                         max_additional_tokens=16)
                 # print response
-                print(salida)
+                # print(salida)
 
     def show_location(self, location):
         description = self.get_description(location)

@@ -94,7 +94,7 @@ def preparar_contexto(personaje):
     context = read_context_file(personaje)
     context = "<|im_start|>{user}\n" + context + "\n<|im_end|>\n" + "<|im_start|>{ai}\n" + "ok, I will strictly follow this context" + "\n<|im_end|>"
     ejemplos = leer_ejemplos(personaje)
-    ejemplos = "<|im_start|>{user}\n" + ejemplos + "<|im_end|>\n" + "<|im_start|>{ai}\n" + "ok, I understand what type of dialogue I can have." + "\n<|im_end|>"
+    ejemplos = "<|im_start|>{user}\nI am going to list some examples but it is VERY IMPORTANT that you do not repeat them but rather create similar examples:\n" + ejemplos + "<|im_end|>\n" + "<|im_start|>{ai}\n" + "ok, I understand what type of dialogue I can have and under no circumstances will I repeat any of the examples." + "\n<|im_end|>"
     all_text = system + '\n' + context + '\n'# + ejemplos
 
     return all_text
