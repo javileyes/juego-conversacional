@@ -1,5 +1,6 @@
 from neo4j import GraphDatabase
 import textwrap
+import importar_contexto
 
 from prompt_toolkit import prompt
 # from prompt_toolkit.input.defaults import create_input
@@ -21,6 +22,7 @@ iteracion = 0
 
 ai = "peter"
 user = "player"
+ai = "Charles_Moreau"
 
 ######################################################################3
 
@@ -41,11 +43,14 @@ historico = f"{contexto}<|im_start|>{user}\nI want us to play a roleplay where I
 
 # crea una class Actor, tiene un atributo "contexto", otro string llamado "sytem_prompt", y otro string llamado "historico".
 class Actor:
-    def __init__(self, system_prompt, contexto, historico):
-        self.system_prompt = system_prompt
-        self.contexto = contexto
-        self.historico = historico   
+    def __init__(self, name, historico):
+        self.name = name
+        # historico son todos los contextos más las conversaciones
+        self.historico = historico
 
+actor = Actor(f"{ai}", importar_contexto.preparar_contexto(f"{ai}"))
+actor.historico = actor.historico.format(ai=ai, user=user)
+historico = actor.historico
 
 def wrap_text(text, width=90): #preserve_newlines
     # Split the input text into lines based on newline characters
@@ -60,20 +65,17 @@ def wrap_text(text, width=90): #preserve_newlines
     return wrapped_text
 
 
-def find_nth_occurrence(string, substring, n):
-    start = 0
-    for _ in range(n):
-        start = string.find(substring, start) + 1
-        if start == 0:
-            return -1
-    return start - 1
+# def find_nth_occurrence(string, substring, n):
+#     start = 0
+#     for _ in range(n):
+#         start = string.find(substring, start) + 1
+#         if start == 0:
+#             return -1
+#     return start - 1
 
 # Encuentra la última aparición de una subcadena en una cadena
 def find_last_occurrence(string, substring):
     return string.rfind(substring)
-
-
-
 
 
 
@@ -87,6 +89,12 @@ def generate_chat(n, ai, user, input_text, system_prompt="",max_additional_token
         
     prompt = f"{user}:{input_text}\n{ai}:"
     final_prompt = system_prompt + historico + prompt
+
+    # si actor.name es igual a f"{ai}" entonces final_prompt = actor.historico + prompt
+    if actor.name == f"{ai}":
+        final_prompt = historico + prompt
+        # print("actor.historico:", actor.historico)
+
     # print("final_prompt:", final_prompt)
     # print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
     inputs = final_prompt
@@ -108,8 +116,11 @@ def generate_chat(n, ai, user, input_text, system_prompt="",max_additional_token
                              max_new_tokens=max_additional_tokens,
                              temperature=0.1
                              )
+    
     text = model_inputs + outputs
 
+
+    print("outputs:", outputs)
 
     historico_index = indice
     # print("historico_index:", historico_index)
