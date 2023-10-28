@@ -122,10 +122,14 @@ def generate_chat(n, ai, user, input_text, system_prompt="",max_additional_token
     # Otra forma de hacerlo en streaming y parando cuando se encuentra un salto de linea o cuando se alcanza el maximo de tokens y se encuentra un punto, signo de interrogacion o exclamacion.
     outputs = ""
     # frases_cortas = True
+    warning = False
     contador = 0
     print(f"{ai}:", end="")
     for text in model(model_inputs, stream=True):
-
+        if warning and text==user: 
+            break
+       
+        if text in ".?!": warning = True        
         print(text, end="", flush=True)
         outputs += text
         if text=="\n" or contador > max_additional_tokens and text in ".?!":
