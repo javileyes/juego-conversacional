@@ -117,6 +117,9 @@ def generate_chat(n, ai, user, input_text, system_prompt="",max_additional_token
     #                          max_new_tokens=max_additional_tokens,
     #                          temperature=0.1
     #                          )
+
+
+    # Otra forma de hacerlo en streaming y parando cuando se encuentra un salto de linea o cuando se alcanza el maximo de tokens y se encuentra un punto, signo de interrogacion o exclamacion.
     outputs = ""
     # frases_cortas = True
     contador = 0
@@ -134,29 +137,30 @@ def generate_chat(n, ai, user, input_text, system_prompt="",max_additional_token
 
     # print("outputs:", outputs)
 
-    historico_index = indice
+    # historico_index = indice
     # print("historico_index:", historico_index)
 
-    inicio_salida_index = text.find(f"{ai}:", indice)
+    # inicio_salida_index = text.find(f"{ai}:", indice)
  
     # fin_salida_index igual al siguiente salto de linea
-    fin_salida_index = text.find('\n', inicio_salida_index)
+    # fin_salida_index = text.find('\n', inicio_salida_index)
 
-    if fin_salida_index == -1:
-        fin_salida_index = len(text)
+    # if fin_salida_index == -1:
+    #     fin_salida_index = len(text)
 
     # print(f"historico_index:{historico_index}")
     # print(f"{inicio_salida_index},{fin_salida_index}")
 
-    salida = text[inicio_salida_index:fin_salida_index]
+    # salida = text[inicio_salida_index:fin_salida_index]
 
-    historico_add = text[historico_index:fin_salida_index] + '\n'
+    # historico_add = text[historico_index:fin_salida_index] + '\n'
     # print("historico_add:", historico_add)
-    historico += historico_add
-    
+    # historico += historico_add
+    historico = text
 
     # print("nuevo texto:", text)
-    wrapped_text = wrap_text(salida)
+    # wrapped_text = wrap_text(salida)
+    wrapped_text = wrap_text(outputs)
     return wrapped_text
 
 ##########################################################
