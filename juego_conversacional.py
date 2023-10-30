@@ -334,7 +334,7 @@ class Game:
                 #                         system_prompt=system_prompt,
                 #                         max_additional_tokens=64)
                 historico = zypher.generate_chat(historico, ai, user, input_text=command,                                    
-                                        max_additional_tokens=64)                
+                                        max_additional_tokens=16)                
                 # print response
                 # print(salida)
 

@@ -21,14 +21,15 @@ def generate_chat(historico, ai, user, input_text, max_additional_tokens=64):
  
     outputs = ""
     # frases_cortas = True
-    # warning = False
+    warning = False
     contador = 0
     print(f"{ai}:", end="")
     for text in model(model_inputs, stream=True):
-        # if warning and text==user: 
-        #     break
+        contador += 1
+        if warning and text.lower()==user.lower(): 
+            break
        
-        # if text in ".?!": warning = True        
+        if text in ".?!": warning = True        
         print(text, end="", flush=True)
         outputs += text
         if text=="\n" or contador > max_additional_tokens and text in ".?!":
