@@ -98,10 +98,23 @@ def preparar_contexto(personaje):
     all_text = system + '\n' + context + '\n'# + ejemplos
 
     return all_text
+
+
+def preparar_contexto_zhyper(personaje):
+
+    system = read_system_file(personaje)
+    system = f"<|system|> system\n{system}</s>"
+    context = read_context_file(personaje)
+    context = "<|user|>\n" + context + "</s>\n<|assistant|>\n" + "ok, I will strictly follow this context" + "</s>"
+    ejemplos = leer_ejemplos(personaje)
+    ejemplos = "<|user|>\nI am going to list some examples do you use them and create similar examples:\n" + ejemplos + "</s>\n" + "<|assistant|>\n" + "ok, I understand what type of dialogue I can have." + "</s>\n"
+    all_text = system + '\n' + context + '\n' + ejemplos
+
+    return all_text
     
 
 # Llamada a la función y guardar el resultado en una variable
-text_result = preparar_contexto('Charles_Moreau')
+# text_result = preparar_contexto('Charles_Moreau')
 
 # Imprimir el texto resultante
-print(text_result)
+# print(text_result)
