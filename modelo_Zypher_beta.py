@@ -15,6 +15,7 @@ def load_model(user="user", ai="assistant"):
 def generate_chat(historico, ai, user, input_text, max_additional_tokens=64):
     global model
 
+    User = user
     prompt = f"{user}:{input_text}</s>\n{ai}:"
   
     final_prompt = historico + "\n" + prompt
@@ -29,34 +30,37 @@ def generate_chat(historico, ai, user, input_text, max_additional_tokens=64):
  
     outputs = ""
     # frases_cortas = True
-    warning = False
+    # warning = False
     contador = 0
     print(f"{ai}:", end="")
-    for text in model(model_inputs, stream=True, stop=["{user}:", "{User}:", "\n"]):
+    for text in model(model_inputs, stream=True, temperature=0.1, stop="</s>"):
         contador += 1
         # if warning and text.lower()==user.lower(): 
         #     break
         outputs += text
-        if text in ".?!": warning = True    
+        # if text in ".?!": warning = True    
         # if "{user}:" in outputs then delete from outputs and break
-        if "{user}:" in outputs: 
-            outputs = outputs.replace("{user}:", "")
+        if f"{user}:" in outputs: 
+            outputs = outputs.replace(f"{user}:", "")
             break
-        if "{User}:" in outputs: 
-            outputs = outputs.replace("{User}:", "")
+        if f"{User}:" in outputs: 
+            outputs = outputs.replace(f"{User}:", "")
             break
+        
         print(text, end="", flush=True)
         
         if contador > max_additional_tokens and text in ".?!":
             break
 
     print("")
-    text = model_inputs + outputs
+    text = model_inputs + outputs + "</s>"
+
+    
 
     return text
 
 
-def generate_long_chat(historico, ai, user, input_text, max_additional_tokens=2000):
+def generate_long_chat(historico, ai, user, input_text, max_additional_tokens=2000, stop="</s>"):
         
     prompt = f"{user}:{input_text}</s>\n{ai}:"
   
@@ -87,6 +91,6 @@ def generate_long_chat(historico, ai, user, input_text, max_additional_tokens=20
         #     break
 
     print("")
-    text = model_inputs + outputs
+    text = model_inputs + outputs + "</s>"
 
     return text
