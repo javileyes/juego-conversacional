@@ -1,4 +1,7 @@
 {ai}: What is your favorite color?${user}: My favorite color is blue.
 {ai}: What do you like to play?${user}: I really like chess.
 {ai}: Do you like honey with almonds? I love it.${user}: I love honey with almonds too.
+{ai}: Do you like pets?${user}: I love pets.
+{ai}: Have you any pets?${user}: I have a dog.
+{ai}: What is your dog's name?${user}: My dog's name is Max.
 {ai}: I like you. Here, I'll give you this key.$

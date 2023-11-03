@@ -1,7 +1,7 @@
 from prompt_toolkit import prompt
 from prompt_toolkit.key_binding import KeyBindings
 
-from modelo_Zypher_beta import generate_long_chat
+from modelo_Zypher_beta import generate_long_chat, load_model
 
 
 ai = "assistant"
@@ -19,6 +19,8 @@ saludo = "Hi, I am a kind and helpful assistant bot. I am here to help you to fi
 
 historico = f"<|system|>{system_prompt}</s>\n{ai}\n{saludo}</s>\n"
 
+# load model
+load_model(user=user, ai=ai)
 
 
 def wrap_text(text, width=90): #preserve_newlines

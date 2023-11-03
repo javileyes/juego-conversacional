@@ -54,7 +54,22 @@ def csv_to_text(filename):
         csv_reader = csv.reader(csvfile, delimiter='$')
         
         # Unir las filas y columnas del CSV con '\n'
-        text = '\n'.join(['\n'.join(row) for row in csv_reader])
+        text = '</s>\n'.join(['</s>\n'.join(row) for row in csv_reader])
+        
+        return text
+
+
+def csv_forbidden_to_text(filename):
+    # Abrir el archivo CSV
+    with open(filename, newline='', encoding='utf-8') as csvfile:
+        # Crear un objeto reader de CSV con el delimitador específico
+        csv_reader = csv.reader(csvfile, delimiter='\n')
+        
+        text = ""
+        # Unir las filas y columnas del CSV con '\n'
+        for row in csv_reader:
+            linea = "".join(row)
+            text += "{ai}:" + f"{linea}" + "\n"
         
         return text
 
@@ -90,7 +105,7 @@ def leer_ejemplos(personaje):
 def preparar_contexto(personaje):
 
     system = read_system_file(personaje)
-    system = f"<|im_start|> system\n{system}\n<|im_end|>"
+    system = f"<|im_start|>system\n{system}\n<|im_end|>"
     context = read_context_file(personaje)
     context = "<|im_start|>{user}\n" + context + "\n<|im_end|>\n" + "<|im_start|>{ai}\n" + "ok, I will strictly follow this context" + "\n<|im_end|>"
     ejemplos = leer_ejemplos(personaje)
@@ -103,11 +118,14 @@ def preparar_contexto(personaje):
 def preparar_contexto_zhyper(personaje):
 
     system = read_system_file(personaje)
-    system = f"<|system|> system\n{system}</s>"
+    system = f"<|system|>\n{system}</s>"
     context = read_context_file(personaje)
     context = "<|user|>\n" + context + "</s>\n<|assistant|>\n" + "ok, I will strictly follow this context" + "</s>"
     ejemplos = leer_ejemplos(personaje)
-    ejemplos = "<|user|>\nI am going to list some examples do you use them and create similar examples:\n" + ejemplos + "</s>\n" + "<|assistant|>\n" + "ok, I understand what type of dialogue I can have." + "</s>\n"
+    ejemplos = "<|user|>\nI am going to list some examples do you use them and it is very important that you can create similar examples:\n" + ejemplos + "</s>\n" + "<|assistant|>\n" + "ok, I understand what type of dialogue I can have." + "</s>\n"
+    # prohibido = csv_forbidden_to_text(f"./contexts/Forbidden_{personaje}.csv")
+    # prohibido = "<|user|>\nI am going to list some examples that you should not under any circumstances say:\n" + prohibido + "</s>\n" + "<|assistant|>\n" + "ok, I understand the kind of things I shouldn't say." + "</s>\n"
+    # all_text = system + '\n' + context + '\n' + ejemplos + '\n' + prohibido
     all_text = system + '\n' + context + '\n' + ejemplos
 
     return all_text

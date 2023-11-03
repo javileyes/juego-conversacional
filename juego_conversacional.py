@@ -1,17 +1,23 @@
 from neo4j import GraphDatabase
 import textwrap
 import importar_contexto
-import modelo_Zypher_beta as zypher
+import load_node4j
 
 from prompt_toolkit import prompt
 # from prompt_toolkit.input.defaults import create_input
 from prompt_toolkit.key_binding import KeyBindings
 
 
+load_node4j.check_neo_connection()
+
+import modelo_Zypher_beta as zypher
+
 # iteracion = 0
 
 user = "player"
 ai = "Charles_Moreau"
+
+zypher.load_model(user)
 
 ######################################################################3
 
@@ -27,8 +33,6 @@ You are a role player of a game that consists of answering questions about your 
 inicio = "ok, let's start!\n"
 
 
-# juego de interrogatorio (IA defensiva)
-# historico = f"{contexto}<|im_start|>{user}\nI want us to play a roleplay where I am a police officer who interrogate you about why you were at a crime scene. The scene is a pub where there were a few people at the bar: 1 couple and a group of 4 friends and you who were alone. A murderer entered and killed the couple with two shots, then ran away and got on his motorcycle that was parked at the door and fled. The police arrived 10 minutes later and that is where the interrogation begins. I am a police inspector and I want information about what happened and also to verify that you are not a suspect.You are Peter, a medical student who had gone down to the bar to rest after a long day of studying.\n{ai}\n{inicio}"
 
 # crea una class Actor, tiene un atributo "contexto", otro string llamado "sytem_prompt", y otro string llamado "historico".
 class Actor:
