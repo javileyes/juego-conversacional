@@ -61,10 +61,10 @@ def generate_chat(n, ai, user, input_text, system_prompt="",max_additional_token
     # print("input_length:", input_length)
     # max_length = input_length + max_additional_tokens  # Calcula la longitud máxima de la secuencia de salida
 
-    indice = find_last_occurrence(inputs, f"{user}:")
-    if indice == -1:
-        # print("no se encontro el indice")
-        indice = len(inputs)
+    # indice = find_last_occurrence(inputs, f"{user}:")
+    # if indice == -1:
+    #     # print("no se encontro el indice")
+    #     indice = len(inputs)
 
     # print("indice:", indice)
     # model_inputs = inputs.to(device)
@@ -84,7 +84,7 @@ def generate_chat(n, ai, user, input_text, system_prompt="",max_additional_token
     contador = 0
     print(f"{ai}:", end="")
     for text in model(model_inputs, stream=True):
-        if warning and text==user: 
+        if warning and text.lower()==user.lower(): 
             break
        
         if text in ".?!": warning = True        
@@ -96,33 +96,8 @@ def generate_chat(n, ai, user, input_text, system_prompt="",max_additional_token
     print("")
     text = model_inputs + outputs
 
-
-    # print("outputs:", outputs)
-
-    # historico_index = indice
-    # print("historico_index:", historico_index)
-
-    # inicio_salida_index = text.find(f"{ai}:", indice)
- 
-    # fin_salida_index igual al siguiente salto de linea
-    # fin_salida_index = text.find('\n', inicio_salida_index)
-
-    # if fin_salida_index == -1:
-    #     fin_salida_index = len(text)
-
-    # print(f"historico_index:{historico_index}")
-    # print(f"{inicio_salida_index},{fin_salida_index}")
-
-    # salida = text[inicio_salida_index:fin_salida_index]
-
-    # historico_add = text[historico_index:fin_salida_index] + '\n'
-    # print("historico_add:", historico_add)
-    # historico += historico_add
     historico = text
 
-    # print("nuevo texto:", text)
-    # wrapped_text = wrap_text(salida)
-    # wrapped_text = wrap_text(outputs)
     return historico
 
 

@@ -1,0 +1,1 @@
+This is a conversation between {character1} and {character2} and the {player}. {character2_name} do not know who is {player} and the first thing he does is ask who he is. {character1_name} can respond and ask with childish but coherently according to the previous conversations.

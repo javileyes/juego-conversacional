@@ -2,10 +2,29 @@ import csv
 import glob
 import os
 
+def read_player_file(personaje):
+    try:
+        # Construir el nombre del archivo basándose en el parámetro personaje
+        filename = f"./contexts/{personaje}/{personaje}_player.txt"
+        
+        # Abrir el archivo y leer su contenido
+        with open(filename, 'r', encoding='utf-8') as file:
+            content = file.read()
+            
+        # Devolver el contenido del archivo
+        return content
+    
+    except FileNotFoundError:
+        return "El archivo no se encontró."
+    
+    except Exception as e:
+        return f"Ocurrió un error al leer el archivo: {str(e)}"
+    
+
 def read_system_file(personaje):
     try:
         # Construir el nombre del archivo basándose en el parámetro personaje
-        filename = f"./contexts/System_{personaje}.txt"
+        filename = f"./contexts/{personaje}/System_{personaje}.txt"
         
         # Abrir el archivo y leer su contenido
         with open(filename, 'r', encoding='utf-8') as file:
@@ -23,11 +42,31 @@ def read_system_file(personaje):
 # # Llamada a la función con un ejemplo de nombre de personaje
 # text = read_system_file('Charles_Moreau')
 # print(text)
+
+def read_system_file_2_character(personaje1, personaje2):
+    try:
+        # Construir el nombre del archivo basándose en el parámetro personaje
+        filename = f"./contexts/{personaje1}__{personaje2}/System_{personaje1}__{personaje2}.txt"
+        
+        # Abrir el archivo y leer su contenido
+        with open(filename, 'r', encoding='utf-8') as file:
+            content = file.read()
+            
+        # Devolver el contenido del archivo
+        return content
+    
+    except FileNotFoundError:
+        return "El archivo no se encontró."
+    
+    except Exception as e:
+        return f"Ocurrió un error al leer el archivo: {str(e)}"
+    
+    
 
 def read_context_file(personaje):
     try:
         # Construir el nombre del archivo basándose en el parámetro personaje
-        filename = f"./contexts/{personaje}.txt"
+        filename = f"./contexts/{personaje}/{personaje}.txt"
         
         # Abrir el archivo y leer su contenido
         with open(filename, 'r', encoding='utf-8') as file:
@@ -46,6 +85,24 @@ def read_context_file(personaje):
 # text = read_system_file('Charles_Moreau')
 # print(text)
 
+def read_character_file(personaje):
+    try:
+        # Construir el nombre del archivo basándose en el parámetro personaje
+        filename = f"./contexts/{personaje}/Character_{personaje}.txt"
+        
+        # Abrir el archivo y leer su contenido
+        with open(filename, 'r', encoding='utf-8') as file:
+            content = file.read()
+            
+        # Devolver el contenido del archivo
+        return content
+    
+    except FileNotFoundError:
+        return "El archivo no se encontró."
+    
+    except Exception as e:
+        return f"Ocurrió un error al leer el archivo: {str(e)}"
+    
 
 def csv_to_text(filename):
     # Abrir el archivo CSV
@@ -80,10 +137,10 @@ def leer_ejemplos(personaje):
     all_text = ""
     
     # Crear el patrón para buscar los archivos (p.ej., "personaje1.csv", "personaje2.csv", ...)
-    pattern = f"./contexts/{personaje}*.csv"
+    pattern = f"./contexts/{personaje}/{personaje}*.csv"
     
     # Ordenar los archivos para procesarlos en orden numérico
-    files = sorted(glob.glob(pattern), key=lambda x: int(x.split(personaje)[1].replace('.csv', '')))
+    files = sorted(glob.glob(pattern), key=lambda x: int(x.split(personaje)[2].replace('.csv', '')))
     
     # Recorrer todos los archivos que coinciden con el patrón
     for i, filename in enumerate(files):
@@ -117,10 +174,17 @@ def preparar_contexto(personaje):
 
 def preparar_contexto_zhyper(personaje):
 
+    #cosas igual al contendio del fichero ./contexts/player/player.txt
+    player = read_player_file('player')
+
+    player_knoledge = read_player_file(personaje) #conocimiento que el caracter tiene del player
+    player_knoledge = player_knoledge.format(player=player)
+    character_name = personaje
+    character = read_character_file(personaje)
     system = read_system_file(personaje)
-    system = f"<|system|>\n{system}</s>"
+    system = f"<|system|>\n{system.format(character=character, player=player)}</s>"
     context = read_context_file(personaje)
-    context = "<|user|>\n" + context + "</s>\n<|assistant|>\n" + "ok, I will strictly follow this context" + "</s>"
+    context = "<|user|>\n" + context + "Have you understood who you are?" + "</s>\n<|assistant|>\n" + "ok, I will strictly follow this context" + "</s>"
     ejemplos = leer_ejemplos(personaje)
     ejemplos = "<|user|>\nI am going to list some examples do you use them and it is very important that you can create similar examples:\n" + ejemplos + "</s>\n" + "<|assistant|>\n" + "ok, I understand what type of dialogue I can have." + "</s>\n"
     # prohibido = csv_forbidden_to_text(f"./contexts/Forbidden_{personaje}.csv")
@@ -130,6 +194,14 @@ def preparar_contexto_zhyper(personaje):
 
     return all_text
     
+
+def preparar_contexto_zhyper_2_character(personaje1, personaje2):
+    character_name1 = personaje1
+    character_name2 = personaje2
+    character1 = read_character_file(personaje1)
+    character2 = read_character_file(personaje2)
+    system1 = read_system_file_2_character(personaje1, personaje2)
+
 
 # Llamada a la función y guardar el resultado en una variable
 # text_result = preparar_contexto('Charles_Moreau')
