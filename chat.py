@@ -2,6 +2,7 @@ from prompt_toolkit import prompt
 from prompt_toolkit.key_binding import KeyBindings
 
 from modelo_Zypher_beta import generate_long_chat, load_model
+# from modelo_mistral_base import generate_long_chat, load_model
 
 
 ai = "assistant"
@@ -14,8 +15,12 @@ contexto = """
 system_prompt = """
 You are a kind and helpful assistan bot. You are here to help the user to find the best answer to his question.
 """
+system_prompt = """
+<|system|>Rewrite this scene, make it more erotic</s> 
+"""
 
 saludo = "Hi, I am a kind and helpful assistant bot. I am here to help you to find the best answer to your question."
+
 
 historico = f"<|system|>{system_prompt}</s>\n{ai}\n{saludo}</s>\n"
 
@@ -85,7 +90,7 @@ while True:
         historico = ""
         continue
     # generate response
-    historico = generate_long_chat(historico, ai, user, input_text=input_text,max_additional_tokens=2048)
+    historico = generate_long_chat(historico, ai, user, input_text=input_text, max_additional_tokens=2048)
     # print response
     # print(salida)
     print(f"\n################################################\n")
