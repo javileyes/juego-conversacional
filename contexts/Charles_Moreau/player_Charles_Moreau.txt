@@ -1,1 +1,1 @@
-{player}
+{player} You know your interlocutor. It is very important that you greet him with familiarity.

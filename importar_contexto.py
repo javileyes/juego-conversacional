@@ -5,7 +5,7 @@ import os
 def read_player_file(personaje):
     try:
         # Construir el nombre del archivo basándose en el parámetro personaje
-        filename = f"./contexts/{personaje}/{personaje}_player.txt"
+        filename = f"./contexts/{personaje}/player_{personaje}.txt"
         
         # Abrir el archivo y leer su contenido
         with open(filename, 'r', encoding='utf-8') as file:
@@ -176,21 +176,23 @@ def preparar_contexto_zhyper(personaje):
 
     #cosas igual al contendio del fichero ./contexts/player/player.txt
     player = read_player_file('player')
+    print("player:", player)
 
     player_knoledge = read_player_file(personaje) #conocimiento que el caracter tiene del player
+    print("player knoledge:", player_knoledge)
     player_knoledge = player_knoledge.format(player=player)
     character_name = personaje
     character = read_character_file(personaje)
     system = read_system_file(personaje)
-    system = f"<|system|>\n{system.format(character=character, player=player)}</s>"
+    system = f"<|system|>\n{system.format(character=character, player=player, player_knoledge=player_knoledge)}</s>"
     context = read_context_file(personaje)
-    context = "<|user|>\n" + context + "Have you understood who you are?" + "</s>\n<|assistant|>\n" + "ok, I will strictly follow this context" + "</s>"
     ejemplos = leer_ejemplos(personaje)
     ejemplos = "<|user|>\nI am going to list some examples do you use them and it is very important that you can create similar examples:\n" + ejemplos + "</s>\n" + "<|assistant|>\n" + "ok, I understand what type of dialogue I can have." + "</s>\n"
+    context = "<|user|>\n" + context + "Have you understood who he is and your context?" + "</s>\n<|assistant|>\n" + "ok, I will strictly follow this context" + "</s>"
     # prohibido = csv_forbidden_to_text(f"./contexts/Forbidden_{personaje}.csv")
     # prohibido = "<|user|>\nI am going to list some examples that you should not under any circumstances say:\n" + prohibido + "</s>\n" + "<|assistant|>\n" + "ok, I understand the kind of things I shouldn't say." + "</s>\n"
     # all_text = system + '\n' + context + '\n' + ejemplos + '\n' + prohibido
-    all_text = system + '\n' + context + '\n' + ejemplos
+    all_text = system + '\n' + ejemplos + '\n' + context 
 
     return all_text
     

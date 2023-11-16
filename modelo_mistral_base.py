@@ -101,9 +101,45 @@ def generate_chat(n, ai, user, input_text, system_prompt="",max_additional_token
     return historico
 
 
+def generate_long_chat(historico, ai, user, input_text, max_additional_tokens=2000, stop=["<|im_end|>"]):
 
+    # if stop is None:
+    #     stop = [eos_token_id]
 
-def generate_long_chat(n, ai, user, input_text, system_prompt="",max_additional_tokens=2000):
+    prompt = f"<|im_start|>{user}\n{input_text}<|im_end|>\n<|im_start|>{ai}\n"
+  
+    final_prompt = historico + "\n" + prompt
+ 
+    inputs = final_prompt
+
+    # input_length = inputs["input_ids"].size(1)  # Obtén el número de tokens en la entrada
+    # print("input_length:", input_length)
+    # max_length = input_length + max_additional_tokens  # Calcula la longitud máxima de la secuencia de salida
+
+    model_inputs = inputs
+ 
+    outputs = ""
+    # frases_cortas = True
+    warning = False
+    # contador = 0
+    print(f"{ai}:", end="")
+    for text in model(model_inputs, stream=True, max_new_tokens= max_additional_tokens, stop=stop):
+        # contador += 1
+        # if text.lower()==user.lower(): 
+        #     break
+       
+        # if text in ".?!": warning = True        
+        print(text, end="", flush=True)
+        outputs += text
+        # if text=="\n" or contador > max_additional_tokens and text in ".?!":
+        #     break
+
+    print("")
+    text = model_inputs + outputs + "<|im_end|>"
+
+    return text
+
+def generate_long_chat2(n, ai, user, input_text, system_prompt="",max_additional_tokens=2000):
     global historico
     global model
 

@@ -1,9 +1,15 @@
 from prompt_toolkit import prompt
 from prompt_toolkit.key_binding import KeyBindings
 
-from modelo_Zypher_beta import generate_long_chat, load_model
-# from modelo_mistral_base import generate_long_chat, load_model
+modelo = "mistral"
 
+if modelo == "mistral":
+    from modelo_mistral_base import generate_long_chat, load_model
+elif modelo == "zypher":
+    from modelo_Zypher_beta import generate_long_chat, load_model
+else:
+    print("modelo no encontrado")
+    exit()
 
 ai = "assistant"
 user = "user"
@@ -15,17 +21,24 @@ contexto = """
 system_prompt = """
 You are a kind and helpful assistan bot. You are here to help the user to find the best answer to his question.
 """
-system_prompt = """
-<|system|>Rewrite this scene, make it more erotic</s> 
-"""
 
-saludo = "Hi, I am a kind and helpful assistant bot. I am here to help you to find the best answer to your question."
+import sys
+# si el comando se ejecuta con parámetro (texto entre comillas) entonces se usa ese texto como system_prompt
+if len(sys.argv) > 1:
+    system_prompt = sys.argv[1]
 
+saludo = "Hello, I am ready to receive and process your input."
 
-historico = f"<|system|>{system_prompt}</s>\n{ai}\n{saludo}</s>\n"
+if modelo == "mistral":
+    historico = f"<|im_start|>system\n{system_prompt}<|im_end|>\n<|im_start|>assistant\n{saludo}<|im_end|>\n"
+elif modelo == "zypher":    
+    historico = f"<|system|>{system_prompt}</s>\n<|assistant|>\n{saludo}</s>\n"
+
 
 # load model
 load_model(user=user, ai=ai)
+
+print(f"{ai}:", saludo)
 
 
 def wrap_text(text, width=90): #preserve_newlines
