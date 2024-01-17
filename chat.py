@@ -1,7 +1,7 @@
 from prompt_toolkit import prompt
 from prompt_toolkit.key_binding import KeyBindings
 
-modelo = "mistral"
+modelo = "zypher"
 
 if modelo == "mistral":
     from modelo_mistral_base import generate_long_chat, load_model
@@ -22,12 +22,22 @@ system_prompt = """
 You are a kind and helpful assistan bot. You are here to help the user to find the best answer to his question.
 """
 
-import sys
-# si el comando se ejecuta con parámetro (texto entre comillas) entonces se usa ese texto como system_prompt
-if len(sys.argv) > 1:
-    system_prompt = sys.argv[1]
-
 saludo = "Hello, I am ready to receive and process your input."
+
+import sys
+
+# Verifica si el comando tenía flag -s o --short
+if "-s" in sys.argv or "--short" in sys.argv:
+    short_answer = True
+
+# Filtra los argumentos para eliminar los flags
+args = [arg for arg in sys.argv[1:] if arg not in ["-s", "--short"]]
+
+# Asigna los valores a system_prompt y saludo basándose en los argumentos restantes
+if len(args) > 0:
+    system_prompt = args[0]
+if len(args) > 1:
+    saludo = args[1]
 
 if modelo == "mistral":
     historico = f"<|im_start|>system\n{system_prompt}<|im_end|>\n<|im_start|>assistant\n{saludo}<|im_end|>\n"
@@ -103,7 +113,7 @@ while True:
         historico = ""
         continue
     # generate response
-    historico = generate_long_chat(historico, ai, user, input_text=input_text, max_additional_tokens=2048)
+    historico = generate_long_chat(historico, ai, user, input_text=input_text, max_additional_tokens=2048, short_answer=short_answer)
     # print response
     # print(salida)
     print(f"\n################################################\n")
