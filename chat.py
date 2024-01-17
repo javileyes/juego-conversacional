@@ -87,19 +87,19 @@ def input_prompt(mode="ACTION"):
         return ''
 
 
-def print_wrapped(text, width=80):
-    words = text.split()
-    line = ''
+# def print_wrapped(text, width=80):
+#     words = text.split()
+#     line = ''
 
-    for word in words:
-        if len(line) + len(word) + 1 > width:
-            print(line)
-            line = word
-        else:
-            if line:
-                line += ' '
-            line += word
-    print(line)
+#     for word in words:
+#         if len(line) + len(word) + 1 > width:
+#             print(line)
+#             line = word
+#         else:
+#             if line:
+#                 line += ' '
+#             line += word
+#     print(line)
 
 
 while True:

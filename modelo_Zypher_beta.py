@@ -89,9 +89,10 @@ def generate_chat(historico, ai, user, input_text, max_additional_tokens=64, sto
     return text
 
 
-def generate_long_chat(historico, ai, user, input_text, max_additional_tokens=2000, stop=["</s>","user:"], short_answer=False):
+def generate_long_chat(historico, ai, user, input_text, max_additional_tokens=2000, stop=["</s>","user:"], short_answer=False, streaming=True, printing=True):
     if short_answer:
-        stop = ["</s>","user:","\n"]
+        # añade como stop el salto de linea
+        stop.append("\n")
 
     # if stop is None:
     #     stop = [eos_token_id]
@@ -113,13 +114,15 @@ def generate_long_chat(historico, ai, user, input_text, max_additional_tokens=20
     warning = False
     # contador = 0
     print(f"{ai}:", end="")
-    for text in model(model_inputs, stream=True, max_new_tokens= max_additional_tokens, stop=stop):
+    for text in model(model_inputs, stream=streaming, max_new_tokens= max_additional_tokens, stop=stop):
         # contador += 1
         # if text.lower()==user.lower(): 
         #     break
        
-        # if text in ".?!": warning = True        
-        print(text, end="", flush=True)
+        # if text in ".?!": warning = True
+        if printing:    
+            print(text, end="", flush=True)
+
         outputs += text
         # if text=="\n" or contador > max_additional_tokens and text in ".?!":
         #     break
