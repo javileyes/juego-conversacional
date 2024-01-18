@@ -101,6 +101,8 @@ def transcribe_audio():
     global ai
     # global iteracion
 
+    traduccion = ""
+
     # Comprueba si el archivo fue enviado
     if 'file' not in request.files:
         return jsonify(error="No file part"), 400
@@ -128,20 +130,22 @@ def transcribe_audio():
     # si el idioma es español, traduce la transcripción al inglés
     if idioma == "es":
         with translate_lock:
-            transcripcion = translate_text_to_english(transcripcion)
-            print("traducción:", transcripcion)
-
-    prompt = f"{historico}\n{user}:{transcripcion}\n{ai}:"
-    print("prompt:", prompt)
+            traduccion = translate_text_to_english(transcripcion)
+        print("traducción:", traduccion)
+        entrada = traduccion
+    else:
+        entrada = transcripcion
+    # prompt = f"{historico}\n{user}:{entrada}\n{ai}:"
+    # print("prompt:", prompt)
 
 
     with generate_lock:
-        historico, output = generate_long_chat(historico, ai, user, input_text=transcripcion, max_additional_tokens=2048, short_answer=short_answer, streaming=False, printing=False)
+        historico, output = generate_long_chat(historico, ai, user, input_text=entrada, max_additional_tokens=2048, short_answer=short_answer, streaming=False, printing=False)
         print("output:", output)
         # print("historico:", historico)
 
 
-    return jsonify(transcripcion=output)
+    return jsonify(entrada=transcripcion, entrada_traducida=traduccion, respuesta=output)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5500, threaded=True)    

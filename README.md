@@ -1,4 +1,12 @@
-# juego-conversacional
+<h1>
+HAY 2 TIPOS DE JUEGOS CONVERSACIONALES:
+
+Juego de texto
+
+Juego de conversación
+
+</h1>
+# juego-conversacional modo texto
 ## Ejecución
 python chat.py [prompt system] [saludo inicial del asistente]
 
@@ -26,3 +34,10 @@ python chat.py --short "I want us to play a roleplay where I am a police officer
  #En español (funciona mejor en inglés)
 python chat.py --short "Quiero que juguemos a un juego de rol en el que yo soy un agente de policía que te interroga sobre por qué estabas en la escena de un crimen. La escena es un pub donde había unas cuantas personas en el bar: 1 pareja y un grupo de 4 amigos y tú que estabas solo. Un asesino entra y mata a la pareja de dos tiros, luego sale corriendo y se sube a su moto que estaba aparcada en la puerta y huye. La policía llegó 10 minutos después y ahí empieza el interrogatorio. Soy inspector de policía y quiero información sobre lo sucedido y también verificar que usted no es sospechoso.Usted es Peter, un estudiante de medicina que había bajado al bar a descansar después de un largo día de estudio." "Hola, señor inspector, estoy un poco nervioso".
 ```
+
+# Juego conversacional
+
+```bash
+python server_zephyr.py --short "You are the CEO of a consulting company called mAgIc, dedicated to finding artificial intelligence solutions for companies. You are interviewing a candidate to work for the company, you are interested in programming skills, mathematics, data science, AI and especially NLP. Ask questions about all this and probe. If the candidate says something wrong let them know." "Good morning, have a seat, tell me your name."
+```
+
