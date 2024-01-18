@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from transformers import MarianMTModel, MarianTokenizer
 from threading import Lock
 import torch
 
@@ -8,6 +9,22 @@ import time
 
 import whisper
 modelWhisper = whisper.load_model('medium')
+
+
+model_name = 'Helsinki-NLP/opus-mt-es-en'  # Modelo para traducir de español a inglés
+modelo_traductor = MarianMTModel.from_pretrained(model_name)
+tokenizer = MarianTokenizer.from_pretrained(model_name)
+
+
+def translate_text_to_english(text):
+    print("Traduciendo texto:", text)
+    tokens = tokenizer(text, return_tensors='pt', padding=True)
+    translated = modelo_traductor.generate(**tokens)
+    decoded = []
+    for t in translated:
+        decoded.append(tokenizer.decode(t, skip_special_tokens=True))
+    
+    return decoded[0]
 
 
 modelo = "zypher"
@@ -33,14 +50,20 @@ You are a kind and helpful assistan bot. You are here to help the user to find t
 
 saludo = "Hello, I am ready to receive and process your input."
 
+idioma = "en"
+
 import sys
 
 # Verifica si el comando tenía flag -s o --short
 if "-s" in sys.argv or "--short" in sys.argv:
     short_answer = True
 
+# Si encuentra el flag -es cambia el idioma a español
+if "-es" in sys.argv:
+    idioma = "es"
+
 # Filtra los argumentos para eliminar los flags
-args = [arg for arg in sys.argv[1:] if arg not in ["-s", "--short"]]
+args = [arg for arg in sys.argv[1:] if arg not in ["-s", "--short", "-es"]]
 
 # Asigna los valores a system_prompt y saludo basándose en los argumentos restantes
 if len(args) > 0:
@@ -61,6 +84,9 @@ print(f"{ai}:", saludo)
 
 # Crea un bloqueo para proteger el código contra la concurrencia a la hora de transcribir
 transcribe_lock = Lock()
+
+# Crea un bloqueo para proteger el código contra la concurrencia a la hora de traducir
+translate_lock = Lock()
 
 # Crea un bloqueo para proteger el código contra la concurrencia a la hora de generar texto
 generate_lock = Lock()
@@ -95,20 +121,27 @@ def transcribe_audio():
     with transcribe_lock:
         # transcripcion = modelWhisper.transcribe(mp3_filepath, fp16=False)
         # transcipción lenguaje inglés
-        transcripcion = modelWhisper.transcribe(mp3_filepath, fp16=False, language="en")
+        transcripcion = modelWhisper.transcribe(mp3_filepath, fp16=False, language=idioma)
         transcripcion = transcripcion["text"]
+        print("transcripción:", transcripcion)
+
+    # si el idioma es español, traduce la transcripción al inglés
+    if idioma == "es":
+        with translate_lock:
+            transcripcion = translate_text_to_english(transcripcion)
+            print("traducción:", transcripcion)
 
     prompt = f"{historico}\n{user}:{transcripcion}\n{ai}:"
     print("prompt:", prompt)
 
 
     with generate_lock:
-        historico = generate_long_chat(historico, ai, user, input_text=transcripcion, max_additional_tokens=2048, short_answer=short_answer, streaming=False, printing=False)
-        # log historico
-        print("Answer:", historico)
+        historico, output = generate_long_chat(historico, ai, user, input_text=transcripcion, max_additional_tokens=2048, short_answer=short_answer, streaming=False, printing=False)
+        print("output:", output)
+        # print("historico:", historico)
 
 
-    return jsonify(transcripcion=historico)
+    return jsonify(transcripcion=output)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5500, threaded=True)    

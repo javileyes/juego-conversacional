@@ -51,17 +51,17 @@ load_model(user=user, ai=ai)
 print(f"{ai}:", saludo)
 
 
-def wrap_text(text, width=90): #preserve_newlines
-    # Split the input text into lines based on newline characters
-    lines = text.split('\n')
+# def wrap_text(text, width=90): #preserve_newlines
+#     # Split the input text into lines based on newline characters
+#     lines = text.split('\n')
 
-    # Wrap each line individually
-    wrapped_lines = [textwrap.fill(line, width=width) for line in lines]
+#     # Wrap each line individually
+#     wrapped_lines = [textwrap.fill(line, width=width) for line in lines]
 
-    # Join the wrapped lines back together using newline characters
-    wrapped_text = '\n'.join(wrapped_lines)
+#     # Join the wrapped lines back together using newline characters
+#     wrapped_text = '\n'.join(wrapped_lines)
 
-    return wrapped_text
+#     return wrapped_text
 
 
 
@@ -113,7 +113,6 @@ while True:
         historico = ""
         continue
     # generate response
-    historico = generate_long_chat(historico, ai, user, input_text=input_text, max_additional_tokens=2048, short_answer=short_answer)
-    # print response
-    # print(salida)
+    historico, _ = generate_long_chat(historico, ai, user, input_text=input_text, max_additional_tokens=2048, short_answer=short_answer)
+    # print historico
     print(f"\n################################################\n")
