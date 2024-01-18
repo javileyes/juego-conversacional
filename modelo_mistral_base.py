@@ -135,9 +135,9 @@ def generate_long_chat(historico, ai, user, input_text, max_additional_tokens=20
         #     break
 
     print("")
-    text = model_inputs + outputs + "<|im_end|>"
+    all_text = model_inputs + outputs + "<|im_end|>"
 
-    return text
+    return all_text, outputs
 
 def generate_long_chat2(n, ai, user, input_text, system_prompt="",max_additional_tokens=2000):
     global historico

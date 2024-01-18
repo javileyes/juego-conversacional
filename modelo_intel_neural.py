@@ -109,6 +109,6 @@ def generate_long_chat(historico, ai, user, input_text, max_additional_tokens=20
         #     break
 
     print("")
-    text = model_inputs + outputs + "</s>"
+    all_text = model_inputs + outputs + "</s>"
 
-    return text
+    return all_text, outputs

@@ -141,7 +141,7 @@ while True:
         historico = ""
         continue
     # generate response
-    historico = generate_long_chat(historico, ai, user, input_text=input_text, max_additional_tokens=2048)
+    historico, _ = generate_long_chat(historico, ai, user, input_text=input_text, max_additional_tokens=2048)
     # print response
     # print(salida)
     print(f"\n################################################\n")
