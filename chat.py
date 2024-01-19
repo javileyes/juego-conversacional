@@ -32,6 +32,7 @@ import sys
 if "-s" in sys.argv or "--short" in sys.argv:
     short_answer = True
 
+traducir = False
 if "-es" in sys.argv:
     traducir = True
 
