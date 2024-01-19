@@ -15,7 +15,10 @@ python chat.py [prompt system] [saludo inicial del asistente]
 ```bash
 python chat.py --short "You are the CEO of a consulting company called mAgIc, dedicated to finding artificial intelligence solutions for companies. You are interviewing a candidate to work for the company, you are interested in programming skills, mathematics, data science, AI and especially NLP. Ask questions about all this and probe. If the candidate says something wrong let them know." "Good morning, have a seat, tell me your name."
 
- #En español (funciona mejor en inglés)
+# En español con traducción al inglés bidireccional (parametro "-es")
+python chat.py -es --short "You are the CEO of a consulting company called mAgIc, dedicated to finding artificial intelligence solutions for companies. You are interviewing a candidate to work for the company, you are interested in programming skills, mathematics, data science, AI and especially NLP. Ask questions about all this and probe. If the candidate says something wrong let them know. After 4 questions if most were good responses you must say 'CONGRATULATION YOU ARE IN OUR TEAM!!' if there was a bad response then you must say 'The interview is finished, thanks for come' IMPORTANT: if the interviewee is rude then you must say 'go away, close the door when go out'" "Good morning, have a seat, tell me your name."
+
+ # En español (funciona mejor en inglés o con traducción al inglés bidireccional)
 python chat.py --short "Eres el CEO de una empresa consultora llamada mAgIc, dedicada a buscar soluciones de inteligencia artificial para las empresas. Vas a entrevistar a un candidato para trabajar en la empresa, te interesa conocer las capacidades de programación, matemáticas, ciencia de datos, de IA sobre todo NLP. Haz preguntas sobre todo esto e indaga. Si el candidato dice algo erroneo hazselo saber. Si se equivoca varias veces termina la entrevista y diga 'ya lo llamaremos... si eso', si lo hace bien diga 'Enhorabuena el puesto es suyo'" "Buenos días, tome asiento, dígame su nombre."
 ```
 
@@ -37,7 +40,12 @@ python chat.py --short "Quiero que juguemos a un juego de rol en el que yo soy u
 
 # Juego conversacional
 
+## En inglés.
 ```bash
-python server_zephyr.py --short "You are the CEO of a consulting company called mAgIc, dedicated to finding artificial intelligence solutions for companies. You are interviewing a candidate to work for the company, you are interested in programming skills, mathematics, data science, AI and especially NLP. Ask questions about all this and probe. If the candidate says something wrong let them know." "Good morning, have a seat, tell me your name."
+python server_zephyr.py --short "You are the CEO of a consulting company called mAgIc, dedicated to finding artificial intelligence solutions for companies. You are interviewing a candidate to work for the company, you are interested in programming skills, mathematics, data science, AI and especially NLP. Ask questions about all this and probe. If the candidate says something wrong let them know. After 4 questions if most were good responses you must say 'CONGRATULATION YOU ARE IN OUR TEAM!!' if there was a bad response then you must say 'The interview is finished, thanks for come.' IMPORTANT: if the interviewee is rude or cocky or is insulting then you must say 'go away! close on your way out!'" "Good morning, have a seat, tell me your name."
 ```
 
+## En español (te va traduciendo todo lo que dices al inglés y lo que dice el chatbot al español)
+```bash
+python server_zephyr.py -es --short "You are the CEO of a consulting company called mAgIc, dedicated to finding artificial intelligence solutions for companies. You are interviewing a candidate to work for the company, you are interested in programming skills, mathematics, data science, AI and especially NLP. Ask questions about all this and probe. If the candidate says something wrong let them know. After 4 questions if most were good responses you must say 'CONGRATULATION YOU ARE IN OUR TEAM!!' if there was a bad response then you must say 'The interview is finished, thanks for come' IMPORTANT: if the interviewee is rude then you must say 'go away, close the door when go out'" "Good morning, have a seat, tell me your name."
+```
