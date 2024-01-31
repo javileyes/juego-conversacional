@@ -35,13 +35,12 @@ def generate_chat(historico, ai, user, input_text, max_additional_tokens=64, sto
   
     final_prompt = historico + "\n" + prompt
  
-    inputs = final_prompt
 
     # input_length = inputs["input_ids"].size(1)  # Obtén el número de tokens en la entrada
     # print("input_length:", input_length)
     # max_length = input_length + max_additional_tokens  # Calcula la longitud máxima de la secuencia de salida
 
-    model_inputs = inputs
+    model_inputs = final_prompt
  
     outputs = ""
     # frases_cortas = True
@@ -101,13 +100,13 @@ def generate_long_chat(historico, ai, user, input_text, max_additional_tokens=20
   
     final_prompt = historico + "\n" + prompt
  
-    inputs = final_prompt
+    # inputs = final_prompt
 
     # input_length = inputs["input_ids"].size(1)  # Obtén el número de tokens en la entrada
     # print("input_length:", input_length)
     # max_length = input_length + max_additional_tokens  # Calcula la longitud máxima de la secuencia de salida
 
-    model_inputs = inputs
+    model_inputs = final_prompt
  
     outputs = ""
     # frases_cortas = True
@@ -127,7 +126,7 @@ def generate_long_chat(historico, ai, user, input_text, max_additional_tokens=20
         # if text=="\n" or contador > max_additional_tokens and text in ".?!":
         #     break
 
-    print("")
+
     all_text = model_inputs + outputs + "</s>"
 
     return all_text, outputs

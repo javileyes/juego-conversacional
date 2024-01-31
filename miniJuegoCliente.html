@@ -1,0 +1,136 @@
+<div id="audioPlayerContainer"></div>
+<button id="recordButton" style="width: 100%; height: 50px;">Pulsa para grabar/detener</button>
+
+<!-- Estilos para textarea y botón de envío -->
+<div style="margin-top: 10px;">
+    <textarea id="textInput" placeholder="Escribe tu texto aquí" rows="4" style="width: calc(100% - 90px); display: inline-block;"></textarea>
+    <button id="sendTextButton" style="width: 80px; height: 70px; vertical-align: top;">Enviar Texto</button>
+</div>
+
+
+<div id="responseText" style="margin-top: 20px; border: 1px solid #ddd; padding: 10px;"></div>
+<script>
+let recordButton = document.getElementById("recordButton");
+let chunks = [];
+let mediaRecorder;
+let isRecording = false;
+
+navigator.mediaDevices.getUserMedia({ audio: true })
+.then(stream => {
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = event => {
+        chunks.push(event.data);
+    };
+    mediaRecorder.onstop = () => {
+        let blob = new Blob(chunks, { 'type': 'audio/ogg; codecs=opus' });
+        enviarAudioAlServidor(blob);
+        chunks = [];
+    };
+});
+
+recordButton.onclick = () => {
+    if (!isRecording) {
+        mediaRecorder.start();
+        isRecording = true;
+        recordButton.textContent = 'Grabando...';
+    } else {
+        mediaRecorder.stop();
+        isRecording = false;
+        recordButton.textContent = 'Pulsa para grabar/detener';
+    }
+};
+
+function enviarAudioAlServidor(blob) {
+    let formData = new FormData();
+    formData.append('file', blob, 'grabacion.ogg');
+
+    // fetch('http://localhost:5500/transcribe', {
+    fetch('http://ia.javiergimenez.es:5500/transcribe', {
+
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {        
+        updateResponseText(data.entrada + "\n" + (data.entrada_traducida ? data.entrada_traducida + "\n" : "") + data.respuesta + "\n" + (data.respuesta_traducida ? data.respuesta_traducida + "\n" : ""));
+        if (data.respuesta_traducida) {
+            obtenerYReproducirAudio(data.respuesta_traducida);
+        }
+        else if (data.respuesta) {
+            obtenerYReproducirAudio(data.respuesta);
+        }
+    })
+    .catch(error => {
+        console.error('Error al enviar el audio:', error);
+    });
+}
+
+// Funcionalidad para enviar texto al servidor y limpiar el textarea
+document.getElementById("sendTextButton").onclick = () => {
+    let textInput = document.getElementById("textInput");
+    let texto = textInput.value;
+    if (texto) {
+        enviarTextoAlServidor(texto);
+        textInput.value = ''; // Limpiar el textarea después de enviar
+    }
+};
+
+function enviarTextoAlServidor(texto) {
+    // fetch('http://localhost:5500/texto', {
+    fetch('http://ia.javiergimenez.es:5500/texto', {
+
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ texto: texto })
+    })
+    .then(response => response.json())
+    .then(data => {
+        updateResponseText(data.entrada + "\n" + (data.entrada_traducida ? data.entrada_traducida + "\n" : "") + data.respuesta + "\n" + (data.respuesta_traducida ? data.respuesta_traducida + "\n" : ""));
+        if (data.respuesta_traducida) {
+            obtenerYReproducirAudio(data.respuesta_traducida);
+        }
+        else if (data.respuesta) {
+            obtenerYReproducirAudio(data.respuesta);
+        }
+    })
+    .catch(error => {
+        console.error('Error al enviar el texto:', error);
+    });
+}
+
+function updateResponseText(text) {
+    document.getElementById('responseText').innerText = text;
+}
+
+function obtenerYReproducirAudio(texto) {
+    fetch('http://localhost:5500/audio', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ texto: texto })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.audio_base64) {
+            createAudioPlayer(data.audio_base64);
+        }
+    })
+    .catch(error => {
+        console.error('Error al obtener el audio:', error);
+    });
+}
+
+function createAudioPlayer(base64Audio) {
+    let audioContainer = document.getElementById('audioPlayerContainer');
+    let audioSrc = `data:audio/wav;base64,${base64Audio}`;
+    let audioPlayer = document.createElement('audio');
+    audioPlayer.src = audioSrc;
+    audioPlayer.controls = true;
+    audioPlayer.autoplay = true;
+    audioContainer.innerHTML = '';
+    audioContainer.appendChild(audioPlayer);
+}
+</script>
