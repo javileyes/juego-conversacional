@@ -27,7 +27,6 @@ document.getElementById('inicioForm').addEventListener('submit', function(e) {
     const data = { system_prompt, saludo };
 
     // Realizar la llamada al servicio Flask
-    //fetch('http://ia.javiergimenez.es:5500/inicio', 
     fetch('http://ia.javiergimenez.es:5500/inicio', {
         method: 'POST',
         headers: {
@@ -95,8 +94,8 @@ function enviarAudioAlServidor(blob) {
     let formData = new FormData();
     formData.append('file', blob, 'grabacion.ogg');
 
-    fetch('http://localhost:5500/transcribe', {
-    // fetch('http://ia.javiergimenez.es:5500/transcribe', {
+    //fetch('http://localhost:5500/transcribe', {
+    fetch('http://ia.javiergimenez.es:5500/transcribe', {
 
         method: 'POST',
         body: formData,
@@ -127,8 +126,8 @@ document.getElementById("sendTextButton").onclick = () => {
 };
 
 function enviarTextoAlServidor(texto) {
-    fetch('http://localhost:5500/texto', {
-    // fetch('http://ia.javiergimenez.es:5500/texto', {
+    //fetch('http://localhost:5500/texto', {
+    fetch('http://ia.javiergimenez.es:5500/texto', {
 
         method: 'POST',
         headers: {
@@ -156,8 +155,8 @@ function updateResponseText(text) {
 }
 
 function obtenerYReproducirAudio(texto) {
-    //fetch('http://ia.javiergimenez.es:5500/audio', {
-    fetch('http://localhost:5500/audio', {
+    //fetch('http://localhost:5500/audio', {
+    fetch('http://ia.javiergimenez.es:5500/audio', {
 
         method: 'POST',
         headers: {
