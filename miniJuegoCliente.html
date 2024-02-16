@@ -13,8 +13,6 @@
     }
 
 
-
-
     #inicioForm {
         max-width: 1000px; /* Limita el ancho del formulario */
         margin: 20px auto; /* Centra el formulario */
@@ -142,6 +140,10 @@ const ejerciciosStrings = {
         saludo: "I'm thinking of a famous fictional character, guess which one he is."
     },
     "guessing_game2": {
+        systemPrompt: "You are #personaje, the fictional character. You have to take on the personality of that character and engage in conversations about your events and experiences.",
+        saludo: "I'm #personaje, the fictional character. Ask me anything you want to know about me."
+    },    
+    "guessing_game3": {
         systemPrompt: "This is a conversational game in which you have to guess a famous character. You should make questions to the user in order to guess the character that the user have choosen.",
         saludo: "Do you want to play? I will guess your choosen character by asking about it."
     },
@@ -184,6 +186,7 @@ IMPORTANT: From now on I can only answer you "yes" or "no" and nothing more.`
             <option value="English_teacher">English teacher</option>
             <option value="guessing_game1">Guessing game 1</option>
             <option value="guessing_game2">Guessing game 2</option>
+            <option value="guessing_game3">Guessing game 3</option>
             <option value="yes_no_game">yes no game</option>
         </select>
     </div>
@@ -237,8 +240,8 @@ document.getElementById('inicioForm').addEventListener('submit', function(e) {
     const saludo = document.getElementById('saludo').value;
 
     document.getElementById('responseText').innerText = ""
-    obtenerYReproducirAudio(saludo)
-    updateResponseText(saludo + "\n")
+    //obtenerYReproducirAudio(saludo)
+    //updateResponseText(saludo + "\n")
 
     // Crear el cuerpo de la solicitud
     const data = { system_prompt, saludo };
@@ -253,7 +256,10 @@ document.getElementById('inicioForm').addEventListener('submit', function(e) {
     })
     .then(response => response.json())
     .then(data => {
-        console.log('Success:', data);
+        let saludo = data.message;
+        document.getElementById('saludo').value = saludo;
+        obtenerYReproducirAudio(saludo)
+        updateResponseText(saludo + "\n")
         alert('Nuevo Juego iniciado');
     })
     .catch((error) => {
