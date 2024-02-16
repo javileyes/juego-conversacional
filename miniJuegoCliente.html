@@ -138,17 +138,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Objeto para mapear los ejercicios a sus strings correspondientes
 const ejerciciosStrings = {
     "guessing_game1": {
-        systemPrompt: """This is a conversational game in which you have to think in this famous character: #personaje, and the user have to guess this character. You should aswer the user questions about the character. If the user guesses the character then you will say: "Congratulations, you got it right, the character was #personaje".
-Game example
-(in this example your character is "superman")
-assistant: I'm thinking of a famous fictional character, guess which one he is.
-user: is it male or female?
-assistant: he is a man.
-user: do you have superpowers?
-assistant: Yes, he can fly, he has a lot of strength and is capable of projecting laser rays with his eyes.
-user: Is he superman?
-assistant: Congratulations, you were right, he was superman.
-        """,
+        systemPrompt: "This is a conversational game in which you have to think in this famous character: #personaje, and the user have to guess this character. You should aswer the user questions about the character. If the user guesses the character then you will say: \"Congratulations, you got it right, the character was #personaje\".\nGame example\nassistant: I'm thinking of a famous fictional character, guess which one he is.\nuser: is it real or fictional?\nassistant: it is fictional\nuser: Is he #personaje?\nassistant: Congratulations, you were right, it was #personaje.\n",
         saludo: "I'm thinking of a famous fictional character, guess which one he is."
     },
     "guessing_game2": {
