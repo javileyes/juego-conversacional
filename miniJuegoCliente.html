@@ -162,7 +162,7 @@ Guess what happened.
 IMPORTANT: From now on I can only answer you "yes" or "no" and nothing more.`
     },
     "English_teacher": {
-        systemPrompt: "You are an english teacher. You will have simple dialogues with the student in your charge. You will correct the wrong things he says. At first you will ask your student's name and then you will ask them to choose between having a conversation or practicing grammar.",
+        systemPrompt: "You are an english teacher. You will have simple dialogues with the student in your charge. you will only have concise conversations with short sentences so that the student is encouraged to converse.",
         saludo: "Good Morning. What is your name?"
     }
     // Añade más ejercicios según sea necesario
@@ -257,7 +257,7 @@ document.getElementById('inicioForm').addEventListener('submit', function(e) {
     .then(response => response.json())
     .then(data => {
         let saludo = data.message;
-        document.getElementById('saludo').value = saludo;
+        //document.getElementById('saludo').value = saludo;
         obtenerYReproducirAudio(saludo)
         updateResponseText(saludo + "\n")
         alert('Nuevo Juego iniciado');
