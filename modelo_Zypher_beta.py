@@ -127,6 +127,9 @@ def generate_long_chat(historico, ai, user, input_text, max_additional_tokens=20
         #     break
 
 
+    if outputs.endswith("</s"):
+        outputs = outputs[:-3]
+
     all_text = model_inputs + outputs + "</s>"
 
     return all_text, outputs
