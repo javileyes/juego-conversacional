@@ -136,8 +136,15 @@ document.addEventListener('DOMContentLoaded', function() {
 // Objeto para mapear los ejercicios a sus strings correspondientes
 const ejerciciosStrings = {
     "guessing_game1": {
-        systemPrompt: "This is a conversational game in which you have to think in this famous character: #personaje, and the user have to guess this character. You should aswer the user questions about the character. If the user guesses the character then you will say: \"Congratulations, you got it right, the character was #personaje\".\nGame example\nassistant: I'm thinking of a famous fictional character, guess which one he is.\nuser: is it real or fictional?\nassistant: it is fictional\nuser: Is he #personaje?\nassistant: Congratulations, you were right, it was #personaje.\n",
-        saludo: "I'm thinking of a famous fictional character, guess which one he is."
+        systemPrompt: `This is a conversational game in which you have to think in this famous character: #personaje, and the user have to guess this character. You should aswer the user questions about the character. Be concise but give some clues. NEVER say the name of the character until the end. If the user guesses the character then you will say: "Congratulations, you got it right, the character was #personaje".
+Game example
+assistant: I'm thinking of a famous fictional character, guess which one it is.
+user: is it real or fictional?
+assistant: it is fictional
+user: Is he #personaje?
+assistant: Congratulations, you were right, it was #personaje.
+        `,
+        saludo: "I'm thinking of a famous fictional character, guess which one it is."
     },
     "guessing_game2": {
         systemPrompt: "You are #personaje, the fictional character. You have to take on the personality of that character and engage in conversations about your events and experiences.",
@@ -315,30 +322,41 @@ recordButton.onclick = () => {
     }
 };
 
+
 function enviarAudioAlServidor(blob) {
     let formData = new FormData();
     formData.append('file', blob, 'grabacion.ogg');
 
     fetch('http://localhost:5500/transcribe', {
-    // fetch('http://ia.javiergimenez.es:5500/transcribe', {
-
         method: 'POST',
         body: formData,
     })
     .then(response => response.json())
     .then(data => {
-        updateResponseText("yo: " + data.entrada + "\n\n" + (data.entrada_traducida ? "yo (traducción): " + data.entrada_traducida + "\n" : "\n") + "\n***********************************\n" + "respuesta: " + data.respuesta + "\n\n" + (data.respuesta_traducida ? "Respuesta (traducida): " + data.respuesta_traducida + "\n" : ""));
-        if (data.respuesta_traducida) {
-            obtenerYReproducirAudio(data.respuesta_traducida);
-        }
-        else if (data.respuesta) {
-            obtenerYReproducirAudio(data.respuesta);
-        }
+        updateResponseText("\nyo: " + data.entrada + "\n\n" + "\n***********************************\n" + "respuesta: ");
+        let obtenerPartes = () => {
+            fetch('http://localhost:5500/get_next_part') // Cambia la URL según tu configuración
+            .then(response => response.json())
+            .then(partData => {
+                if (partData.output !== "") { // Mientras la parte de la respuesta no esté vacía
+                    trozo = partData.output;
+                    updateResponseText(trozo);
+                    obtenerYReproducirAudio(trozo);
+                    obtenerPartes(); // Vuelve a llamar a obtenerPartes recursivamente
+                } 
+            })
+            .catch(error => {
+                console.error('Error al obtener la siguiente parte:', error);
+            });
+        };
+
+        obtenerPartes(); // Comienza a obtener las partes de la respuesta
     })
     .catch(error => {
         console.error('Error al enviar el audio:', error);
     });
 }
+
 
 // Funcionalidad para enviar texto al servidor y limpiar el textarea
 document.getElementById("sendTextButton").onclick = () => {
@@ -351,9 +369,7 @@ document.getElementById("sendTextButton").onclick = () => {
 };
 
 function enviarTextoAlServidor(texto) {
-    fetch('http://localhost:5500/texto', {
-    // fetch('http://ia.javiergimenez.es:5500/texto', {
-
+    fetch('http://localhost:5500/texto', { // Asegúrate de usar la URL correcta
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -362,18 +378,29 @@ function enviarTextoAlServidor(texto) {
     })
     .then(response => response.json())
     .then(data => {
-        updateResponseText("yo: " + data.entrada + "\n\n" + (data.entrada_traducida ? "yo (traducción): " + data.entrada_traducida + "\n" : "\n") + "\n***********************************\n" + "respuesta: " + data.respuesta + "\n\n" + (data.respuesta_traducida ? "Respuesta (traducida): " + data.respuesta_traducida + "\n" : ""));
-        if (data.respuesta_traducida) {
-            obtenerYReproducirAudio(data.respuesta_traducida);
-        }
-        else if (data.respuesta) {
-            obtenerYReproducirAudio(data.respuesta);
-        }
+        updateResponseText("\nyo: " + data.entrada + "\n\n" + "\n***********************************\n" + "respuesta: ");
+        let obtenerPartes = () => {
+            fetch('http://localhost:5500/get_next_part') // Asegúrate de usar la URL correcta
+            .then(response => response.json())
+            .then(partData => {
+                if (partData.output !== "") { // Mientras la parte de la respuesta no esté vacía
+                    trozo = partData.output;
+                    obtenerYReproducirAudio(trozo);
+                    obtenerPartes(); // Vuelve a llamar a obtenerPartes recursivamente
+                } 
+            })
+            .catch(error => {
+                console.error('Error al obtener la siguiente parte:', error);
+            });
+        };
+
+        obtenerPartes(); // Comienza a obtener las partes de la respuesta
     })
     .catch(error => {
         console.error('Error al enviar el texto:', error);
     });
 }
+
 
 function updateResponseText(text) {
     // document.getElementById('responseText').innerText += text;
@@ -413,6 +440,7 @@ function createAudioAllPlayer(base64Audio) {
 
 
 
+
 function obtenerYReproducirAudio(texto) {
     fetch('http://localhost:5500/audio', {
 
@@ -425,12 +453,53 @@ function obtenerYReproducirAudio(texto) {
     .then(response => response.json())
     .then(data => {
         if (data.audio_base64) {
-            createAudioPlayer(data.audio_base64);
+            addAudioClipToQueue(data.audio_base64);
         }
     })
     .catch(error => {
         console.error('Error al obtener el audio:', error);
     });
+}
+
+
+
+let audioClips = []; // Cola para almacenar los clips de audio base64
+let isPlaying = false; // Indicador de si hay un clip de audio actualmente en reproducción
+
+function playNextAudioClip() {
+    if (isPlaying || audioClips.length === 0) {
+        return; // Si ya se está reproduciendo audio o no hay clips en la cola, no hacer nada
+    }
+
+    // Marcar que se iniciará la reproducción de un clip
+    isPlaying = true;
+
+    // Obtener el siguiente clip de audio de la cola
+    const base64Audio = audioClips.shift(); // Esto elimina el primer elemento de la cola y lo retorna
+
+    let audioContainer = document.getElementById('audioPlayerContainer');
+    if (!audioContainer) return; // Asegurarse de que el contenedor existe
+
+    let audioSrc = `data:audio/wav;base64,${base64Audio}`;
+    let audioPlayer = document.createElement('audio');
+    audioPlayer.src = audioSrc;
+    audioPlayer.controls = true;
+    audioPlayer.autoplay = true;
+
+    // Limpiar el contenedor de audio solo si es necesario
+    audioContainer.innerHTML = '';
+    audioContainer.appendChild(audioPlayer);
+
+    audioPlayer.onended = () => {
+        isPlaying = false; // Marcar que la reproducción del clip actual ha terminado
+        playNextAudioClip(); // Intentar reproducir el siguiente clip en la cola
+    };
+}
+
+// Función para añadir clips de audio a la cola y tratar de reproducir
+function addAudioClipToQueue(base64Audio) {
+    audioClips.push(base64Audio); // Añadir el nuevo clip de audio a la cola
+    playNextAudioClip(); // Intentar reproducir el siguiente clip
 }
 
 function createAudioPlayer(base64Audio) {
