@@ -136,6 +136,40 @@ def generate_long_chat(historico, ai, user, input_text, max_additional_tokens=20
     return all_text, outputs
 
 
+
+def pre_warm_chat(historico, max_additional_tokens=100, stop=["</s>","user:"], short_answer=True, streaming=False, printing=False):
+    if short_answer:
+        # añade como stop el salto de linea
+        stop.append("\n")
+
+    outputs = ""
+    # frases_cortas = True
+    warning = False
+    # contador = 0
+    for text in model(historico, stream=streaming, max_new_tokens= max_additional_tokens, stop=stop):
+        # contador += 1
+        # if text.lower()==user.lower(): 
+        #     break
+       
+        # if text in ".?!": warning = True
+        if printing:    
+            print(text, end="", flush=True)
+
+        outputs += text
+        # if text=="\n" or contador > max_additional_tokens and text in ".?!":
+        #     break
+
+
+    if outputs.endswith("</s"):
+        outputs = outputs[:-3]
+
+    outputs = outputs + "</s>"
+
+    return historico, outputs
+
+
+
+
 import threading
 
 class EstadoGeneracion:
@@ -181,7 +215,7 @@ def generate_in_file_parts(historico, ai, user, input_text, max_additional_token
 
             outputs += text
             parte_actual += text
-            if text in ",;:.?!" and len(parte_actual)>15:
+            if text in ",;:.?!" and len(parte_actual)>25:
                 contador += 1
                 estado_generacion.parts.append(parte_actual)
                 parte_actual = ""
