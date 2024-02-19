@@ -1,4 +1,5 @@
 from ctransformers import AutoModelForCausalLM, AutoTokenizer
+from threading import Lock
 
 model=None
 eos_token_id=None
@@ -133,3 +134,68 @@ def generate_long_chat(historico, ai, user, input_text, max_additional_tokens=20
     all_text = model_inputs + outputs + "</s>"
 
     return all_text, outputs
+
+
+import threading
+
+class EstadoGeneracion:
+    def __init__(self):
+        self.parts = []
+        self.generando = False
+        self.lock = threading.Lock()
+
+
+estado_generacion = EstadoGeneracion()
+
+generate_lock = Lock()
+
+def generate_in_file_parts(historico, ai, user, input_text, max_additional_tokens=2000, stop=["</s>","user:"], short_answer=False, streaming=True, printing=True):
+    global estado_generacion
+
+    # global generate_lock
+
+    with generate_lock:
+        estado_generacion.generando = True
+        print(f"generando={estado_generacion.generando}; Generando respuesta para {user}:", input_text)
+        contador = 0 # indice de la parte
+        estado_generacion.parts = []  # lista de partes del texto
+        parte_actual = ""  # añade la primera parte
+
+        if short_answer:
+            # añade como stop el salto de linea
+            stop.append("\n")
+
+
+        prompt = f"{user}:{input_text}</s>\n{ai}:"
+    
+        final_prompt = historico + "\n" + prompt
+    
+
+        model_inputs = final_prompt
+    
+        outputs = ""
+        print(f"{ai}:", end="")
+        for text in model(model_inputs, stream=streaming, max_new_tokens= max_additional_tokens, stop=stop):
+            if printing:    
+                print(text, end="", flush=True)
+
+            outputs += text
+            parte_actual += text
+            if text in ",;:.?!" and len(parte_actual)>15:
+                contador += 1
+                estado_generacion.parts.append(parte_actual)
+                parte_actual = ""
+            
+
+        if outputs.endswith("</s"):
+            outputs = outputs[:-3]
+            parte_actual = parte_actual[:-3]
+
+        if parte_actual:
+            estado_generacion.parts.append(parte_actual)
+
+        all_text = model_inputs + outputs + "</s>"
+        estado_generacion.generando = False
+        print(f"generando={estado_generacion.generando}; Respuesta generada para {user}:", outputs)
+
+        return all_text, outputs
