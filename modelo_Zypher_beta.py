@@ -174,7 +174,9 @@ import threading
 
 class EstadoGeneracion:
     def __init__(self):
-        self.parts = []
+        # lista de 100 partes del texto
+        self.parts = [""]*100
+        self.top = -1
         self.generando = False
         self.lock = threading.Lock()
 
@@ -185,14 +187,15 @@ generate_lock = Lock()
 
 def generate_in_file_parts(historico, ai, user, input_text, max_additional_tokens=2000, stop=["</s>","user:"], short_answer=False, streaming=True, printing=True):
     global estado_generacion
-
+    
     # global generate_lock
 
     with generate_lock:
-        estado_generacion.generando = True
+        estado_generacion.top = -1
+        indiceParte = 0
+        estado_generacion.generando = True        
         print(f"generando={estado_generacion.generando}; Generando respuesta para {user}:", input_text)
-        contador = 0 # indice de la parte
-        estado_generacion.parts = []  # lista de partes del texto
+        # estado_generacion.parts = []  # lista de partes del texto
         parte_actual = ""  # añade la primera parte
 
         if short_answer:
@@ -216,8 +219,10 @@ def generate_in_file_parts(historico, ai, user, input_text, max_additional_token
             outputs += text
             parte_actual += text
             if text in ",;:.?!" and len(parte_actual)>25:
-                contador += 1
-                estado_generacion.parts.append(parte_actual)
+                print("trozo generado:", parte_actual)
+                estado_generacion.parts[indiceParte] = parte_actual
+                estado_generacion.top = indiceParte
+                indiceParte += 1                
                 parte_actual = ""
             
 
@@ -226,10 +231,10 @@ def generate_in_file_parts(historico, ai, user, input_text, max_additional_token
             parte_actual = parte_actual[:-3]
 
         if parte_actual:
-            estado_generacion.parts.append(parte_actual)
+            estado_generacion.parts[indiceParte] = parte_actual
 
         all_text = model_inputs + outputs + "</s>"
         estado_generacion.generando = False
-        print(f"generando={estado_generacion.generando}; Respuesta generada para {user}:", outputs)
+        print(f"generando={estado_generacion.generando}; Respuesta Terminada. El total generado para {user}:", outputs)
 
         return all_text, outputs
