@@ -272,8 +272,7 @@ document.getElementById('inicioForm').addEventListener('submit', function(e) {
     .then(response => response.json())
     .then(data => {
         let saludo = data.message;
-        //document.getElementById('saludo').value = saludo;
-        obtenerYReproducirAudio(saludo)
+        //obtenerYReproducirAudio(saludo)
         updateResponseText(saludo + "\n")
         alert('Nuevo Juego iniciado');
     })
@@ -342,16 +341,23 @@ function enviarAudioAlServidor(blob) {
     .then(response => response.json())
     .then(data => {
         updateResponseText("\nyo: " + data.entrada + "\n\n" + "\n***********************************\n" + "respuesta: ");
+        
+        let indice = 0; // Inicializa el índice para las partes de la respuesta
+
         let obtenerPartes = () => {
-            fetch('http://localhost:5500/get_next_part') // Cambia la URL según tu configuración
+            // Añade el índice como parámetro de la consulta a la URL
+            fetch(`http://localhost:5500/get_next_part?index=${indice}`) // Cambia la URL según tu configuración
             .then(response => response.json())
             .then(partData => {
                 if (partData.output !== "") { // Mientras la parte de la respuesta no esté vacía
-                    trozo = partData.output;
+                    let trozo = partData.output;
                     updateResponseText(trozo);
-                    obtenerYReproducirAudio(trozo);
-                    obtenerPartes(); // Vuelve a llamar a obtenerPartes recursivamente
-                } 
+                    currentAudioIndex = 0  //pone a 0 el buffer de audio
+                    obtenerYReproducirAudio(trozo, indice);
+
+                    indice++; // Incrementa el índice para la próxima llamada
+                    obtenerPartes(); // Vuelve a llamar a obtenerPartes recursivamente con el nuevo índice
+                }
             })
             .catch(error => {
                 console.error('Error al obtener la siguiente parte:', error);
@@ -366,6 +372,7 @@ function enviarAudioAlServidor(blob) {
 }
 
 
+
 // Funcionalidad para enviar texto al servidor y limpiar el textarea
 document.getElementById("sendTextButton").onclick = () => {
     let textInput = document.getElementById("textInput");
@@ -375,6 +382,18 @@ document.getElementById("sendTextButton").onclick = () => {
         textInput.value = ''; // Limpiar el textarea después de enviar
     }
 };
+
+
+
+let audioBuffer = [];
+// inicializa audioBuffer con 100 elementos vacíos
+for (let i = 0; i < 100; i++) {
+    audioBuffer.push({});
+}
+let milisegundosInicio = Date.now();
+
+let currentAudioIndex = 0; // Para controlar el orden de reproducción
+
 
 function enviarTextoAlServidor(texto) {
     fetch('http://localhost:5500/texto', { // Asegúrate de usar la URL correcta
@@ -389,16 +408,25 @@ function enviarTextoAlServidor(texto) {
         updateResponseText("\nyo: " + data.entrada + "\n\n" + "\n***********************************\n" + "respuesta: ");
         
         let indice = 0; // Inicializa el índice para las partes de la respuesta
+        //borramos buffer de audio
+        for (let i = 0; i < currentAudioIndex; i++) {
+            audioBuffer[i] = {};
+        }
+        currentAudioIndex = 0  //pone a 0 el buffer de audio        
 
         let obtenerPartes = () => {
             // Añade el índice como parámetro de la consulta
+            console.log('Llamando a /get_next_part Obteniendo la parte:', indice, 'microsegundos:', Date.now()-milisegundosInicio);
             fetch(`http://localhost:5500/get_next_part?index=${indice}`) 
             .then(response => response.json())
             .then(partData => {
                 if (partData.output !== "") { // Mientras la parte de la respuesta no esté vacía
                     let trozo = partData.output;
                     updateResponseText(trozo);
-                    obtenerYReproducirAudio(trozo);
+
+
+
+                    obtenerYReproducirAudio(trozo, indice);
 
                     indice++; // Incrementa el índice para la próxima llamada
                     obtenerPartes(); // Vuelve a llamar a obtenerPartes recursivamente con el nuevo índice
@@ -456,7 +484,8 @@ function createAudioAllPlayer(base64Audio) {
 
 
 
-function obtenerYReproducirAudio(texto) {
+function obtenerYReproducirAudio(texto, index) {
+    console.log('Obteniendo audio para:', texto, 'índice:', index, 'microsegundos:', Date.now() - milisegundosInicio);
     fetch('http://localhost:5500/audio', {
 
         method: 'POST',
@@ -468,7 +497,8 @@ function obtenerYReproducirAudio(texto) {
     .then(response => response.json())
     .then(data => {
         if (data.audio_base64) {
-            addAudioClipToQueue(data.audio_base64);
+            console.log('Enviando audio al buffer de reproducción, tamaño:', data.audio_base64.length, 'índice:', index, 'microsegundos:', Date.now()-milisegundosInicio);
+            addAudioClipToBuffer(data.audio_base64, index);
         }
     })
     .catch(error => {
@@ -478,19 +508,29 @@ function obtenerYReproducirAudio(texto) {
 
 
 
-let audioQueue = [];
-let currentAudioIndex = 0; // Para controlar el orden de reproducción
 
-function addAudioClipToQueue(base64Audio, index) {
-    audioQueue.push({ audio: base64Audio, index: index });
-    // Ordenar la cola por índice para mantener el orden correcto
-    audioQueue.sort((a, b) => a.index - b.index);
-    playNextAudioClip();
+
+
+function addAudioClipToBuffer(base64Audio, index) {
+    audioBuffer[index] = { audio: base64Audio};
+    let audioPlayer = document.getElementById('audioPlayerContainer');
+    console.log('Despues de meter en Buffer, VIENDO si ejecuto play con indice:', index, 'pausa:',audioPlayer.paused, 'currentAudioIndex', currentAudioIndex,'microsegundos:', Date.now()-milisegundosInicio);
+    if (audioPlayer.paused && currentAudioIndex == index) {
+        playNextAudioClip(index);
+    }
 }
 
-function playNextAudioClip() {
-    if (audioQueue.length > 0 && audioQueue[0].index === currentAudioIndex) {
-        const audioData = audioQueue.shift();
+function esObjetoVacio(obj) {
+  return Object.keys(obj).length === 0;
+}
+
+
+function playNextAudioClip(index) {
+    console.log('Entrando en playNextAudioClip para ver si reproducimos audio con índice:', index, 'currentAudioIndex:', currentAudioIndex, 'microsegundos:', Date.now()-milisegundosInicio, 'esObjetoVacio:', esObjetoVacio(audioBuffer[currentAudioIndex]));
+    if (index==currentAudioIndex && !esObjetoVacio(audioBuffer[currentAudioIndex])) {
+        console.log('Iniciando variables para Reproducion audio en el índice:', index, 'currentAudioIndex:', currentAudioIndex, 'tamaño:', audioBuffer[currentAudioIndex].audio.length, 'microsegundos:', Date.now()-milisegundosInicio);
+        const audioData = audioBuffer[currentAudioIndex];
+        //audioBuffer[currentAudioIndex] = {}; // Limpia el elemento actual
         currentAudioIndex++;
 
         let audioContainer = document.getElementById('audioPlayerContainer');
@@ -502,6 +542,7 @@ function playNextAudioClip() {
         audioPlayer.controls = true;
         audioPlayer.autoplay = true;
 
+        console.log('Justo antes de APPENDCHILD Reproduciendo audio con índice:', index, 'microsegundos:', Date.now()-milisegundosInicio);
         audioContainer.appendChild(audioPlayer);
 
         audioPlayer.onended = playNextAudioClip;
