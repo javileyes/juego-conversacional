@@ -1,0 +1,526 @@
+
+<head>
+  <style>
+
+
+    body {
+        font-family: Arial, sans-serif; /* Mejora la tipografía general */
+    }
+
+
+    #system_prompt {
+        height: 150px;
+    }
+
+
+    #inicioForm {
+        max-width: 1000px; /* Limita el ancho del formulario */
+        margin: 20px auto; /* Centra el formulario */
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Añade un sombreado ligero */
+    }
+
+    #inicioForm div {
+        margin-bottom: 15px; /* Añade más espacio entre los campos */
+    }
+
+    #inicioForm label {
+        font-weight: bold; /* Hace que las etiquetas sean más notables */
+        display: block; /* Asegura que la etiqueta esté encima del input */
+        margin-bottom: 5px; /* Espacio entre la etiqueta y el campo */
+    }
+
+    #inicioForm select, #inicioForm textarea, #inicioForm button {
+        width: 100%; /* Aprovecha todo el ancho disponible */
+        padding: 8px; /* Añade un relleno para mayor comodidad */
+        margin-top: 4px; /* Espacio mínimo superior para separación */
+    }
+
+    #inicioForm select {
+        cursor: pointer; /* Indica que es un elemento interactivo */
+        font-size: 16px; /* Aumenta el tamaño del texto */
+    }
+
+    #inicioForm textarea {
+        resize: vertical; /* Permite al usuario ajustar la altura verticalmente */
+    }
+
+    #inicioForm button {
+        background-color: #007bff; /* Color de fondo */
+        color: white; /* Color del texto */
+        border: none; /* Elimina el borde */
+        padding: 10px 15px; /* Añade relleno */
+        font-size: 18px; /* Aumenta el tamaño del texto */
+        cursor: pointer; /* Indica que es un elemento interactivo */
+        border-radius: 5px; /* Bordes redondeados */
+    }
+
+    #inicioForm button:hover {
+        background-color: #0056b3; /* Oscurece el botón al pasar el mouse */
+    }
+
+#audioPlayerContainer {
+    /* Añade estilos específicos si planeas insertar un reproductor de audio */
+    margin-bottom: 20px; /* Espacio antes del botón de grabación */
+}
+
+#recordButton {
+    background-color: #f44336; /* Color rojo para la grabación */
+    color: white;
+    border: none;
+    padding: 10px 0;
+    font-size: 18px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#recordButton:hover {
+    background-color: #d32f2f; /* Oscurece el botón al pasar el mouse */
+}
+
+/* Estilos para el área de texto y botón de envío */
+/* Contenedor del área de texto y el botón */
+div#textButtonContainer {
+    display: flex; /* Establece el contenedor para usar flexbox */
+    justify-content: space-between; /* Espacia los elementos uniformemente */
+    align-items: center; /* Alinea los elementos verticalmente en el centro */
+}
+
+/* Área de texto */
+#textInput {
+    flex-grow: 1; /* Permite que el área de texto crezca para ocupar el espacio disponible */
+    margin-right: 10px; /* Añade un margen a la derecha para separarlo del botón */
+    border: 1px solid #ccc; /* Establece un borde sutil */
+    border-radius: 5px; /* Bordes redondeados */
+    padding: 8px; /* Añade padding interno */
+}
+
+/* Botón */
+#sendTextButton {
+    padding: 8px 15px; /* Ajusta el padding para dimensionar el botón */
+    background-color: #4CAF50; /* Color de fondo */
+    color: white; /* Color del texto */
+    border: none; /* Elimina el borde */
+    border-radius: 5px; /* Bordes redondeados */
+    cursor: pointer; /* Cambia el cursor a mano al pasar sobre el botón */
+}
+
+#sendTextButton:hover {
+    background-color: #388E3C; /* Oscurece el botón al pasar el mouse */
+}
+
+
+#responseText {
+    height: 250px;
+    margin-top: 20px;
+    border: 1px solid #ddd;
+    padding: 10px;
+    overflow-y: auto; /* Asegura el desplazamiento vertical */
+    background-color: #f9f9f9; /* Fondo claro para resaltar el área */
+}
+
+
+
+</style>
+</head>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+    window.scrollTo(0, 0); // Asegura que la página comience en la parte superior
+    document.getElementById('ejercicios').focus(); // Luego establece el foco en el selector
+});
+
+
+
+// Objeto para mapear los ejercicios a sus strings correspondientes
+const ejerciciosStrings = {
+    "guessing_game1": {
+        systemPrompt: `This is a conversational game in which you have to think in this famous character: #personaje, and the user have to guess this character. You should aswer the user questions about the character. Be concise but give some clues. NEVER say the name of the character until the end. If the user guesses the character then you will say: "Congratulations, you got it right, the character was #personaje". If user give up you will say: "what a shame!, the character was #personaje
+Game success example
+assistant: I'm thinking of a famous fictional character, guess which one it is.
+user: is it real or fictional?
+assistant: it is fictional
+user: Is he #personaje?
+assistant: Congratulations, you were right, it was #personaje.
+Game give up example
+assistant: I'm thinking of a famous fictional character, guess which one it is.
+user: is it real or fictional?
+assistant: it is fictional
+user: Is he Benito Perez?
+assistant: No, it has nothing to do with.
+user: I give up. Who is it?
+assistant: what a shame!, the character was #personaje
+`,
+        saludo: "I'm thinking of a famous fictional character, guess which one it is."
+    },
+    "guessing_game2": {
+        systemPrompt: "You are #personaje, the fictional character. You have to take on the personality of that character and engage in conversations about your events and experiences.",
+        saludo: "I'm #personaje, the fictional character. Ask me anything you want to know about me."
+    },    
+    "guessing_game3": {
+        systemPrompt: "This is a conversational game in which you have to guess a famous character. You should make questions to the user in order to guess the character that the user have choosen.",
+        saludo: "Do you want to play? I will guess your choosen character by asking about it."
+    },
+    "yes_no_game": {
+        systemPrompt: `IMPORTANT: You only can answer "yes" or "no" (nothing more!).
+This is a conversational game between you and a the user. The game consists that only at the beggininig you tell the user only a piece of the context and the user having to guess the "key point" of the context from "yes or no questions". The User could ask anything about the story (context) to guess the "key point" of the context but Assistant could only answer "Yes" or "not". If the user asks a question that does not lend itself or cannot be answered with a "yes" or "no" such as "What is the man's name?" then Assistant will respond: "Only "yes or no" questions. When the user guesses the key point of the story you will say: "Congratulations, you have guessed the key to the story.
+Game context: A man named Edgar is the lighthouse keeper of Águilas for 30 years. He always turns on the lighthouse at dusk and shortly after sleeps in a small room next to its large lamp. On Edgar's birthday, at dusk after lighting the lighthouse, he decided to go to dinner with an old friend to celebrate his birthday. During dinner he drank more than necessary and they both got drunk. Afther the dinner Edgar accompanied his friend to her house and then went to his house, the lighthouse, where he sleeps every night. Upon entering the lighthouse and going up to his room, due to his drunkenness and the fact that he was very sleepy, he decided to turn off the light (which was actually the light from the main lamp of the lighthouse) to sleep off the drunkenness and did it without realizing or knowing it was dangerous. During the early hours of the morning, a cruise ship full of passengers crashed into the cliff that the lighthouse protected because, when it was turned off, neither the lookout, nor the captain, nor the rest of the crew nor the passengers could see that they were heading against the cliff. An hour later Edgar wakes up, it hasn't dawned yet but you can hear sirens and a lot of noise from the rescuers who are trying to rescue the shipwrecked. Edgar turns on the lamp to illuminate the scene where hundreds of dead shipwrecked people continually crash against the cliff due to the waves. Faced with this heartbreaking reality and his feeling of guilt, Edgar decides to commit suicide by jumping from the top of the lighthouse. The key point of the story that the user must find out is: "Edgar commits suicide because he was the LIGHTHOUSE keeper." or similar but always emphasizing that he was the lighthouse keeper.
+IMPORTANT: You only can answer "yes" or "no" or "Only yes or no questions"
+Examples of correct answers:
+user: What is Edgar's job?
+Assistant: Only yes or no questions.
+user: Is Edgar a man?
+Assistant: yes.`,
+        saludo: `This is I can show about the hidden story: Edgar was dazed and comes to his room, turns off the light and lies down on his bed. He wakes up a few hours later, turns on the light, looks out the window and is so horrified that he ends up jumping out of the window and committing suicide.
+Guess what happened.
+IMPORTANT: From now on I can only answer you "yes" or "no" and nothing more.`
+    },
+    "English_teacher": {
+        systemPrompt: "You are an english teacher. You will have simple dialogues with the student in your charge. you will only have concise conversations with short sentences so that the student is encouraged to converse.",
+        saludo: "Good Morning. What is your name?"
+    }
+    // Añade más ejercicios según sea necesario
+};
+</script>
+
+
+<form id="inicioForm">
+    <div>
+        <label for="system_prompt">System Prompt:</label><br>
+        <textarea id="system_prompt" name="system_prompt" rows="10" cols="100"></textarea>
+    </div>
+    <div>
+        <label for="saludo">Saludo:</label><br>
+        <textarea id="saludo" name="saludo" rows="4" cols="100"></textarea>
+    </div>
+    <div>
+        <label for="ejercicios">Juegos:</label><br>
+        <select id="ejercicios" name="ejercicios">
+            <option value="">Selecciona un ejercicio</option>
+            <option value="English_teacher">English teacher</option>
+            <option value="guessing_game1">Guessing game 1</option>
+            <option value="guessing_game2">Guessing game 2</option>
+            <option value="guessing_game3">Guessing game 3</option>
+            <option value="yes_no_game">yes no game</option>
+        </select>
+    </div>
+    <button type="submit">EMPEZAR!</button>
+
+</form>
+
+
+<div style="margin-bottom: 20px; display: flex; align-items: center;"> 
+    <button id="downloadButton" style="background-color: #4CAF50; /* Color de fondo */
+                                       color: white; /* Color del texto */
+                                       padding: 15px 32px; /* Padding alrededor del texto */
+                                       text-align: center; /* Alinea el texto al centro */
+                                       text-decoration: none; /* Elimina la decoración del texto */
+                                       display: inline-block; /* Hace que el botón sea un bloque en línea */
+                                       font-size: 16px; /* Tamaño del texto */
+                                       margin: 4px 2px; /* Margen alrededor del botón */
+                                       cursor: pointer; /* Cambia el cursor a un puntero */
+                                       border: none; /* Elimina el borde */
+                                       border-radius: 8px; /* Redondea las esquinas del botón */
+    ">Descargar Conversación</button>
+    <div id="audioPlayerAllContainer"></div>
+</div>
+
+
+<script>
+    document.getElementById('downloadButton').addEventListener('click', function() {
+        obtenerYReproducirAll(); // Llama a la función en vez de redirigir
+    });
+</script>
+
+
+<script>
+
+document.getElementById('ejercicios').addEventListener('change', function() {
+    var selectedKey = this.value; // La clave seleccionada del objeto
+    if (selectedKey) {
+        // Actualiza los textareas con los valores correspondientes
+        document.getElementById('system_prompt').value = ejerciciosStrings[selectedKey].systemPrompt;
+        document.getElementById('saludo').value = ejerciciosStrings[selectedKey].saludo;
+    }
+});
+
+
+document.getElementById('inicioForm').addEventListener('submit', function(e) {
+    // Prevenir el comportamiento predeterminado del formulario
+    e.preventDefault();
+
+    // Obtener los valores de los campos del formulario
+    const system_prompt = document.getElementById('system_prompt').value;
+    const saludo = document.getElementById('saludo').value;
+
+    document.getElementById('responseText').innerText = ""
+    //obtenerYReproducirAudio(saludo)
+    //updateResponseText(saludo + "\n")
+
+    // Crear el cuerpo de la solicitud
+    const data = { system_prompt, saludo };
+
+    // Realizar la llamada al servicio Flask
+    fetch('http://localhost:5500/inicio', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+    })
+    .then(response => response.json())
+    .then(data => {
+        let saludo = data.message;
+        //document.getElementById('saludo').value = saludo;
+        obtenerYReproducirAudio(saludo)
+        updateResponseText(saludo + "\n")
+        alert('Nuevo Juego iniciado');
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+        alert('Error al enviar los strings');
+    });
+});
+</script>
+
+
+<div id="audioPlayerContainer"></div>
+<button id="recordButton" style="width: 100%; height: 50px;">Pulsa para grabar/detener</button>
+
+
+<!-- Estilos para textarea y botón de envío -->
+<div id="textButtonContainer" style="margin-top: 10px;">
+    <textarea id="textInput" placeholder="Escribe tu texto aquí" rows="4"></textarea>
+    <button id="sendTextButton">Enviar Texto</button>
+</div>
+
+
+
+<div id="responseText" style="height: 250px; margin-top: 20px; border: 1px solid #ddd; padding: 10px; overflow-y:auto;"></div>
+<script>
+let recordButton = document.getElementById("recordButton");
+let chunks = [];
+let mediaRecorder;
+let isRecording = false;
+
+navigator.mediaDevices.getUserMedia({ audio: true })
+.then(stream => {
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = event => {
+        chunks.push(event.data);
+    };
+    mediaRecorder.onstop = () => {
+        console.log('mediaRecorder Detenido!!');
+        let blob = new Blob(chunks, { 'type': 'audio/ogg; codecs=opus' });
+        enviarAudioAlServidor(blob);
+        chunks = [];
+    };
+});
+
+recordButton.onclick = () => {
+    if (!isRecording) {
+        mediaRecorder.start();
+        isRecording = true;
+        recordButton.textContent = 'Grabando...';
+    } else {
+        mediaRecorder.stop();
+        isRecording = false;
+        recordButton.textContent = 'Pulsa para grabar/detener';
+    }
+};
+
+
+function enviarAudioAlServidor(blob) {
+    let formData = new FormData();
+    formData.append('file', blob, 'grabacion.ogg');
+
+    fetch('http://localhost:5500/transcribe', {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        updateResponseText("\nyo: " + data.entrada + "\n\n" + "\n***********************************\n" + "respuesta: ");
+        let obtenerPartes = () => {
+            fetch('http://localhost:5500/get_next_part') // Cambia la URL según tu configuración
+            .then(response => response.json())
+            .then(partData => {
+                if (partData.output !== "") { // Mientras la parte de la respuesta no esté vacía
+                    trozo = partData.output;
+                    updateResponseText(trozo);
+                    obtenerYReproducirAudio(trozo);
+                    obtenerPartes(); // Vuelve a llamar a obtenerPartes recursivamente
+                } 
+            })
+            .catch(error => {
+                console.error('Error al obtener la siguiente parte:', error);
+            });
+        };
+
+        obtenerPartes(); // Comienza a obtener las partes de la respuesta
+    })
+    .catch(error => {
+        console.error('Error al enviar el audio:', error);
+    });
+}
+
+
+// Funcionalidad para enviar texto al servidor y limpiar el textarea
+document.getElementById("sendTextButton").onclick = () => {
+    let textInput = document.getElementById("textInput");
+    let texto = textInput.value;
+    if (texto) {
+        enviarTextoAlServidor(texto);
+        textInput.value = ''; // Limpiar el textarea después de enviar
+    }
+};
+
+function enviarTextoAlServidor(texto) {
+    fetch('http://localhost:5500/texto', { // Asegúrate de usar la URL correcta
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ texto: texto })
+    })
+    .then(response => response.json())
+    .then(data => {
+        updateResponseText("\nyo: " + data.entrada + "\n\n" + "\n***********************************\n" + "respuesta: ");
+        
+        let indice = 0; // Inicializa el índice para las partes de la respuesta
+
+        let obtenerPartes = () => {
+            // Añade el índice como parámetro de la consulta
+            fetch(`http://localhost:5500/get_next_part?index=${indice}`) 
+            .then(response => response.json())
+            .then(partData => {
+                if (partData.output !== "") { // Mientras la parte de la respuesta no esté vacía
+                    let trozo = partData.output;
+                    updateResponseText(trozo);
+                    obtenerYReproducirAudio(trozo);
+
+                    indice++; // Incrementa el índice para la próxima llamada
+                    obtenerPartes(); // Vuelve a llamar a obtenerPartes recursivamente con el nuevo índice
+                }
+            })
+            .catch(error => {
+                console.error('Error al obtener la siguiente parte:', error);
+            });
+        };
+
+        obtenerPartes(); // Comienza a obtener las partes de la respuesta
+    })
+    .catch(error => {
+        console.error('Error al enviar el texto:', error);
+    });
+}
+
+
+function updateResponseText(text) {
+    // document.getElementById('responseText').innerText += text;
+    textarea = document.getElementById('responseText')
+    textarea.innerText += text;
+    textarea.scrollTop = textarea.scrollHeight;
+}
+
+
+
+function obtenerYReproducirAll() {
+    fetch('http://localhost:5500/all_conversation', {
+        method: 'GET',
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.audio_base64) {
+            createAudioAllPlayer(data.audio_base64);
+        }
+    })
+    .catch(error => {
+        console.error('Error al obtener el audio:', error);
+    });
+}
+
+
+function createAudioAllPlayer(base64Audio) {
+    let audioContainer = document.getElementById('audioPlayerAllContainer');
+    let audioSrc = `data:audio/wav;base64,${base64Audio}`;
+    let audioPlayer = document.createElement('audio');
+    audioPlayer.src = audioSrc;
+    audioPlayer.controls = true;
+    audioPlayer.autoplay = true;
+    audioContainer.innerHTML = '';
+    audioContainer.appendChild(audioPlayer);
+}
+
+
+
+
+function obtenerYReproducirAudio(texto) {
+    fetch('http://localhost:5500/audio', {
+
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ texto: texto })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.audio_base64) {
+            addAudioClipToQueue(data.audio_base64);
+        }
+    })
+    .catch(error => {
+        console.error('Error al obtener el audio:', error);
+    });
+}
+
+
+
+let audioQueue = [];
+let currentAudioIndex = 0; // Para controlar el orden de reproducción
+
+function addAudioClipToQueue(base64Audio, index) {
+    audioQueue.push({ audio: base64Audio, index: index });
+    // Ordenar la cola por índice para mantener el orden correcto
+    audioQueue.sort((a, b) => a.index - b.index);
+    playNextAudioClip();
+}
+
+function playNextAudioClip() {
+    if (audioQueue.length > 0 && audioQueue[0].index === currentAudioIndex) {
+        const audioData = audioQueue.shift();
+        currentAudioIndex++;
+
+        let audioContainer = document.getElementById('audioPlayerContainer');
+        audioContainer.innerHTML = ''; // Limpia el contenedor
+
+        let audioSrc = `data:audio/wav;base64,${audioData.audio}`;
+        let audioPlayer = document.createElement('audio');
+        audioPlayer.src = audioSrc;
+        audioPlayer.controls = true;
+        audioPlayer.autoplay = true;
+
+        audioContainer.appendChild(audioPlayer);
+
+        audioPlayer.onended = playNextAudioClip;
+    }
+}
+
+
+function createAudioPlayer(base64Audio) {
+    let audioContainer = document.getElementById('audioPlayerContainer');
+    let audioSrc = `data:audio/wav;base64,${base64Audio}`;
+    let audioPlayer = document.createElement('audio');
+    audioPlayer.src = audioSrc;
+    audioPlayer.controls = true;
+    audioPlayer.autoplay = true;
+    audioContainer.innerHTML = '';
+    audioContainer.appendChild(audioPlayer);
+}
+
+
+
+
+</script>
