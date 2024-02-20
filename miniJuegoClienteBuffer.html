@@ -272,7 +272,7 @@ document.getElementById('inicioForm').addEventListener('submit', function(e) {
     .then(response => response.json())
     .then(data => {
         let saludo = data.message;
-        //obtenerYReproducirAudio(saludo)
+        obtenerYReproducirSaludo(saludo)
         updateResponseText(saludo + "\n")
         alert('Nuevo Juego iniciado');
     })
@@ -481,7 +481,27 @@ function createAudioAllPlayer(base64Audio) {
     audioContainer.appendChild(audioPlayer);
 }
 
+function obtenerYReproducirSaludo(texto) {
+    console.log('Obteniendo audio para:', texto, 'microsegundos:', Date.now() - milisegundosInicio);
+    fetch('http://localhost:5500/audio', {
 
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ texto: texto })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.audio_base64) {
+            console.log('Obteniendo audio, tamaño:', data.audio_base64.length, 'SALUDO', 'microsegundos:', Date.now()-milisegundosInicio);
+            playAudio(data.audio_base64);
+        }
+    })
+    .catch(error => {
+        console.error('Error al obtener el audio:', error);
+    });
+}
 
 
 function obtenerYReproducirAudio(texto, index) {
@@ -513,7 +533,7 @@ function obtenerYReproducirAudio(texto, index) {
 
 function addAudioClipToBuffer(base64Audio, index) {
     audioBuffer[index] = { audio: base64Audio};
-    let audioPlayer = document.getElementById('audioPlayerContainer');
+    let audioPlayer = document.getElementById('audioPlayerContainer').querySelector('audio');
     console.log('Despues de meter en Buffer, VIENDO si ejecuto play con indice:', index, 'pausa:',audioPlayer.paused, 'currentAudioIndex', currentAudioIndex,'microsegundos:', Date.now()-milisegundosInicio);
     if (audioPlayer.paused && currentAudioIndex == index) {
         playNextAudioClip(index);
@@ -549,6 +569,19 @@ function playNextAudioClip(index) {
     }
 }
 
+function playAudio(audioBase64) {
+    let audioContainer = document.getElementById('audioPlayerContainer');
+    audioContainer.innerHTML = ''; // Limpia el contenedor
+
+    let audioSrc = `data:audio/wav;base64,${audioBase64}`;
+    let audioPlayer = document.createElement('audio');
+    audioPlayer.src = audioSrc;
+    audioPlayer.controls = true;
+    audioPlayer.autoplay = true;
+
+    console.log('Reproduciendo saludo! Justo antes de APPENDCHILD', 'microsegundos:', Date.now()-milisegundosInicio);
+    audioContainer.appendChild(audioPlayer);
+}
 
 function createAudioPlayer(base64Audio) {
     let audioContainer = document.getElementById('audioPlayerContainer');
