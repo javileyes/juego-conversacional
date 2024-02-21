@@ -218,7 +218,7 @@ def generate_in_file_parts(historico, ai, user, input_text, max_additional_token
 
             outputs += text
             parte_actual += text
-            if text in ",;:.?!" and len(parte_actual)>25:
+            if text in ",;:.?!" and len(parte_actual)>20:
                 print("trozo generado:", parte_actual)
                 estado_generacion.parts[indiceParte] = parte_actual
                 estado_generacion.top = indiceParte
