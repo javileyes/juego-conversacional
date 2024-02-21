@@ -230,8 +230,9 @@ def generate_in_file_parts(historico, ai, user, input_text, max_additional_token
             outputs = outputs[:-3]
             parte_actual = parte_actual[:-3]
 
-        if parte_actual:
+        if len(parte_actual)>1:
             estado_generacion.parts[indiceParte] = parte_actual
+            estado_generacion.top = indiceParte
 
         all_text = model_inputs + outputs + "</s>"
         estado_generacion.generando = False
