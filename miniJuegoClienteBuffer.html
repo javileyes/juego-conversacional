@@ -343,6 +343,11 @@ function enviarAudioAlServidor(blob) {
         updateResponseText("\nyo: " + data.entrada + "\n\n" + "\n***********************************\n" + "respuesta: ");
         
         let indice = 0; // Inicializa el índice para las partes de la respuesta
+        //borramos buffer de audio
+        for (let i = 0; i < currentAudioIndex; i++) {
+            audioBuffer[i] = {};
+        }        
+        currentAudioIndex = 0  //pone a 0 el buffer de audio
 
         let obtenerPartes = () => {
             // Añade el índice como parámetro de la consulta a la URL
@@ -352,7 +357,7 @@ function enviarAudioAlServidor(blob) {
                 if (partData.output !== "") { // Mientras la parte de la respuesta no esté vacía
                     let trozo = partData.output;
                     updateResponseText(trozo);
-                    currentAudioIndex = 0  //pone a 0 el buffer de audio
+
                     obtenerYReproducirAudio(trozo, indice);
 
                     indice++; // Incrementa el índice para la próxima llamada
