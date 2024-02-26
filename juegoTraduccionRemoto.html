@@ -1,0 +1,608 @@
+
+<head>
+  <style>
+
+
+    body {
+        font-family: Arial, sans-serif; /* Mejora la tipografía general */
+    }
+
+
+
+    #inicioForm {
+        max-width: 1000px; /* Limita el ancho del formulario */
+        margin: 20px auto; /* Centra el formulario */
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Añade un sombreado ligero */
+    }
+
+    #inicioForm div {
+        margin-bottom: 15px; /* Añade más espacio entre los campos */
+    }
+
+    #inicioForm label {
+        font-weight: bold; /* Hace que las etiquetas sean más notables */
+        display: block; /* Asegura que la etiqueta esté encima del input */
+        margin-bottom: 5px; /* Espacio entre la etiqueta y el campo */
+    }
+
+    #inicioForm select, #inicioForm textarea, #inicioForm button {
+        width: 100%; /* Aprovecha todo el ancho disponible */
+        padding: 8px; /* Añade un relleno para mayor comodidad */
+        margin-top: 4px; /* Espacio mínimo superior para separación */
+    }
+
+    #inicioForm select {
+        cursor: pointer; /* Indica que es un elemento interactivo */
+        font-size: 16px; /* Aumenta el tamaño del texto */
+    }
+
+    #inicioForm textarea {
+        resize: vertical; /* Permite al usuario ajustar la altura verticalmente */
+    }
+
+    #inicioForm button {
+        background-color: #007bff; /* Color de fondo */
+        color: white; /* Color del texto */
+        border: none; /* Elimina el borde */
+        padding: 10px 15px; /* Añade relleno */
+        font-size: 18px; /* Aumenta el tamaño del texto */
+        cursor: pointer; /* Indica que es un elemento interactivo */
+        border-radius: 5px; /* Bordes redondeados */
+    }
+
+    #inicioForm button:hover {
+        background-color: #0056b3; /* Oscurece el botón al pasar el mouse */
+    }
+
+#audioPlayerContainer {
+    /* Añade estilos específicos si planeas insertar un reproductor de audio */
+    margin-bottom: 20px; /* Espacio antes del botón de grabación */
+}
+
+#audioPlayerContainerSol {
+    /* Añade estilos específicos si planeas insertar un reproductor de audio */
+    margin-bottom: 20px; /* Espacio antes del botón de grabación */
+}
+
+#recordButton {
+    background-color: #f44336; /* Color rojo para la grabación */
+    color: white;
+    border: none;
+    padding: 10px 0;
+    font-size: 18px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#recordButton:hover {
+    background-color: #d32f2f; /* Oscurece el botón al pasar el mouse */
+}
+
+/* Estilos para el área de texto y botón de envío */
+/* Contenedor del área de texto y el botón */
+div#textButtonContainer {
+    display: flex; /* Establece el contenedor para usar flexbox */
+    justify-content: space-between; /* Espacia los elementos uniformemente */
+    align-items: center; /* Alinea los elementos verticalmente en el centro */
+}
+
+/* Área de texto */
+#textInput {
+    flex-grow: 1; /* Permite que el área de texto crezca para ocupar el espacio disponible */
+    margin-right: 10px; /* Añade un margen a la derecha para separarlo del botón */
+    border: 1px solid #ccc; /* Establece un borde sutil */
+    border-radius: 5px; /* Bordes redondeados */
+    padding: 8px; /* Añade padding interno */
+}
+
+/* Botón */
+#sendTextButton {
+    padding: 8px 15px; /* Ajusta el padding para dimensionar el botón */
+    background-color: #4CAF50; /* Color de fondo */
+    color: white; /* Color del texto */
+    border: none; /* Elimina el borde */
+    border-radius: 5px; /* Bordes redondeados */
+    cursor: pointer; /* Cambia el cursor a mano al pasar sobre el botón */
+}
+
+#sendTextButton:hover {
+    background-color: #388E3C; /* Oscurece el botón al pasar el mouse */
+}
+
+
+#responseText {
+    height: 250px;
+    margin-top: 20px;
+    border: 1px solid #ddd;
+    padding: 10px;
+    overflow-y: auto; /* Asegura el desplazamiento vertical */
+    background-color: #f9f9f9; /* Fondo claro para resaltar el área */
+}
+
+
+#nuevoGrupoSelect {
+    width: 100%; /* Aprovecha todo el ancho disponible */
+    padding: 8px; /* Añade un relleno para mayor comodidad */
+    margin-top: 4px; /* Espacio mínimo superior para separación */
+    cursor: pointer; /* Indica que es un elemento interactivo */
+    font-size: 16px; /* Aumenta el tamaño del texto */
+}
+
+    <title>Refrescar Datos</title>
+    <style>
+        /* Estilo básico para el botón de refrescar */
+        .btn-refrescar {
+            background-color: #f5f5f5;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        /* Icono de refrescar utilizando una entidad HTML */
+        .btn-refrescar:before {
+            content: "\21BB"; /* Símbolo de flecha circular */
+            margin-right: 5px;
+        }
+    </style>
+
+</style>
+</head>
+
+<script>
+let registros = []; // Almacena aquí todos los registros procesados
+
+  // Función para cargar y procesar el archivo CSV
+  function cargarCSVDesdeServidor() {
+    fetch('http://ia.javiergimenez.es:5500/get-translations-file')
+      .then(response => response.text())
+      .then(text => procesarCSV(text))
+      .catch(error => console.error('Error al cargar el archivo CSV:', error));
+  }
+
+  // Función para procesar el contenido del CSV y almacenar los registros
+  function procesarCSV(csvText) {
+    const filas = csvText.split('\n');
+    registros = filas.map(fila => {
+        const columnas = fila.replace(/\r/g, '').split('#');
+        return columnas.map(columna => columna.trim()); 
+    });
+    const tipos = new Set();
+    tipos.add('All'); // Añadir una opción predeterminada
+    tipos.add('repaso'); // Añadir una opción siempre existente
+
+    registros.forEach(registro => {
+      if (registro.length > 2) {
+        registro[2].split('/').forEach(tipo => tipos.add(tipo));
+      }
+    });
+    llenarSelector(Array.from(tipos), 'ejercicios');
+    llenarSelector(Array.from(tipos), 'nuevoGrupoSelect'); // Actualiza para llenar el <select>
+
+  }
+
+
+  function guardarCambios() {
+    // Supongamos que 'registros' contiene los datos modificados que queremos guardar
+    fetch('http://ia.javiergimenez.es:5500/save-translations-file', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(registros),  // 'registros' debe ser el array de tus datos
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data.message); // Mensaje de éxito
+    })
+    .catch((error) => {
+        console.error('Error:', error); // Manejo de errores
+    });
+}
+
+
+    function llenarSelector(tipos, elementoID) {
+        const elemento = document.getElementById(elementoID);
+        elemento.innerHTML = ''; // Limpiar opciones existentes
+ 
+        tipos.forEach(tipo => {
+            const opcion = document.createElement('option');
+            opcion.value = tipo;
+            opcion.textContent = tipo; // Solo para el selector de ejercicios
+            elemento.appendChild(opcion);
+        });
+    }
+
+  
+
+  // Función para manejar el cambio de selección y actualizar la variable ejercicio
+  let ejercicio = 'All'; // Variable para almacenar el tipo seleccionado
+  function actualizarEjercicio(valorSeleccionado) {
+    ejercicio = valorSeleccionado;
+    console.log('Ejercicio seleccionado:', ejercicio);
+  }
+
+
+//let indiceActual = -1; // Variable para almacenar el índice del registro actual
+
+// Función para obtener un registro aleatorio que contenga el valor seleccionado como un string completo en la tercera columna
+function obtenerRegistroAleatorio(tipoSeleccionado) {
+  let registrosFiltrados;
+
+  // Si el tipo seleccionado es "All", no filtra los registros
+  if (tipoSeleccionado.trim() === "All") {
+    registrosFiltrados = registros;
+  } else {
+    // Filtra los registros verificando que el tipo seleccionado, sin espacios en blanco,
+    // sea exactamente uno de los tipos en la tercera columna después de hacer split por '/'
+    registrosFiltrados = registros.filter(registro => {
+      if (registro.length > 2) {
+        // Divide la tercera columna por '/', elimina espacios en blanco y verifica si el tipo seleccionado está presente
+        const tipos = registro[2].split('/').map(tipo => tipo.trim());
+        return tipos.includes(tipoSeleccionado.trim());
+      }
+      return false;
+    });
+  }
+
+  if (registrosFiltrados.length === 0) {
+    return null; // O manejar de otra manera si no hay registros que coincidan
+  }
+  
+  // Selecciona uno de los registros filtrados al azar y lo devuelve
+  const indiceAleatorio = Math.floor(Math.random() * registrosFiltrados.length);
+//   indiceActual = indiceAleatorio
+  return registrosFiltrados[indiceAleatorio];
+}
+
+
+
+// Función para añadir un grupo a la tercera columna del registro especificado por el índice
+function añadirGrupo(registro, grupo) {
+  // Verifica que el índice esté dentro del rango de los registros cargados
+  if (registro) {
+    // Divide la tercera columna por '/', elimina espacios en blanco de los extremos, y verifica si el grupo ya está presente
+    let grupos = registro[2].split('/').map(g => g.trim());
+    if (!grupos.includes(grupo)) {
+      grupos.push(grupo); // Añade el nuevo grupo
+      registro[2] = grupos.join('/'); // Reconstruye la tercera columna y actualiza el registro
+      return true; // Indica que el grupo fue añadido exitosamente
+    } else {
+      return false; // Indica que el grupo ya estaba presente
+    }
+  } else {
+    console.error('Índice fuera de rango.');
+    return false; // También retorna false si el índice está fuera de rango
+  }
+}
+
+// Función para eliminar un grupo de la tercera columna del registro especificado por el índice
+function eliminaGrupo(registro, grupo) {
+  // Verifica que el índice esté dentro del rango de los registros cargados
+  if (registro) {
+    // Divide la tercera columna por '/', elimina espacios en blanco de los extremos, y verifica si el grupo existe
+    let grupos = registro[2].split('/').map(grupo => grupo.trim());
+    if (grupos.includes(grupo)) {
+      grupos = grupos.filter(g => g !== grupo); // Elimina el grupo
+      registro[2] = grupos.join('/'); // Reconstruye la tercera columna y actualiza el registro
+      return true; // Indica que el grupo fue eliminado exitosamente
+    } else {
+      return false; // Indica que el grupo no se encontró
+    }
+  } else {
+    console.error('Índice fuera de rango.');
+    return false; // También retorna false si el índice está fuera de rango
+  }
+}
+
+
+
+function arrayToCSVString(arrayDeArrays) {
+    // Mapea cada sub-array a un string, uniendo los campos con '#'
+    const lineas = arrayDeArrays.map(registro => registro.join('#'));
+    // Une todas las líneas con saltos de línea para formar el string completo del CSV
+    const csvString = lineas.join('\n');
+    return csvString;
+}
+
+
+  // Llama a cargarCSVDesdeServidor al cargar la página
+  window.addEventListener('load', cargarCSVDesdeServidor);
+
+
+
+</script>
+
+
+<form id="inicioForm">
+    <div>
+        <label for="enunciado">Traduce esto:</label><br>
+        <textarea id="enunciado" name="enunciado" rows="1" cols="100"></textarea>
+    </div>
+    <div>
+        <label for="ejercicios">Juegos:</label> <button class="btn-refrescar" onclick="procesarCSV(arrayToCSVString(registros))">Refrescar</button>
+<br>
+        <select id="ejercicios" onchange="actualizarEjercicio(this.value)">
+        <!-- Las opciones se llenarán dinámicamente -->
+        </select>
+       
+    </div>
+    <button type="submit">Siguiente!</button>
+
+</form>
+
+<div id="manejoGrupos">
+    <!-- Primera fila con botones para añadir a repaso y eliminar del grupo -->
+    <div>
+        <button id="btnAñadirRepaso">Añadir a repaso</button>
+        <button id="btnEliminarRepaso">Eliminar a repaso</button>
+        <button id="btnGuardarCambios">Guardar Cambios</button>
+    </div>
+    
+    <p> AÑADIR O ELIMINAR ESTE EJERCICIO DE UN GRUPO: </p>
+    <div>
+        <select id="nuevoGrupoSelect" onchange="seleccionarGrupo()">
+            <!-- Las opciones se llenarán dinámicamente -->
+        </select>
+        <input type="text" id="nuevoGrupoInput" placeholder="Nuevo grupo o seleccione">
+        <button id="btnAñadirNuevoGrupo">Añadir</button>
+        <button id="btnEliminarDelGrupo">Eliminar del grupo</button>
+
+    </div>
+</div>
+
+<script>
+
+
+let registroActual
+
+
+document.getElementById('btnGuardarCambios').addEventListener('click', guardarCambios);
+
+
+document.getElementById('btnAñadirRepaso').addEventListener('click', function() {
+    if (añadirGrupo(registroActual, 'repaso')) {
+        alert('Añadido a repaso'); // Si el grupo fue añadido exitosamente
+    } else {
+        // Si el registro ya estaba en el grupo o hubo algún otro error
+        alert('El registro ya está en el grupo repaso o no se pudo añadir');
+    }
+});
+
+document.getElementById('btnEliminarRepaso').addEventListener('click', function() {
+    // Utiliza la función eliminaGrupo para intentar eliminar el registro actual del grupo "repaso"
+    if (eliminaGrupo(registroActual, 'repaso')) {
+        alert('Eliminado del grupo repaso'); // Si el grupo fue eliminado exitosamente
+    } else {
+        // Si el registro no estaba en el grupo o hubo algún otro error
+        alert('No se ha eliminado del grupo porque, en realidad, no se encontraba en el grupo repaso');
+    }
+});
+
+
+document.getElementById('btnEliminarDelGrupo').addEventListener('click', function() {
+    // Asume que tienes un selector definido en alguna parte de tu HTML para elegir el grupo
+    let grupoSeleccionado = document.getElementById('nuevoGrupoInput').value; // Asegúrate de que el ID coincida
+    if (eliminaGrupo(registroActual, grupoSeleccionado)) {
+        alert('Eliminado del grupo ' + grupoSeleccionado); // Opcional: feedback al usuario
+    } else {
+        // Muestra un mensaje de error si el registro no se encontraba en el grupo
+        alert(`No se ha eliminado del grupo porque, en realidad, no se encontraba en el grupo ${grupoSeleccionado}`);
+    }
+});
+
+document.getElementById('btnAñadirNuevoGrupo').addEventListener('click', function() {
+    let nuevoGrupo = document.getElementById('nuevoGrupoInput').value.trim();
+    if (nuevoGrupo) {
+        // La función añadirGrupo ahora devuelve true si el grupo fue añadido con éxito, y false si ya existía
+        if (añadirGrupo(registroActual, nuevoGrupo)) {
+            alert('Añadido al grupo ' + nuevoGrupo); // Si el grupo fue añadido exitosamente
+        } else {
+            // Si el registro ya estaba en el grupo
+            alert(`El registro ya se encuentra en el grupo ${nuevoGrupo}, por lo que no se ha añadido de nuevo.`);
+        }
+    } else {
+        alert('Por favor, introduce un nombre de grupo válido.'); // Si el input está vacío o es inválido
+    }
+});
+
+
+function seleccionarGrupo() {
+    const select = document.getElementById('nuevoGrupoSelect');
+    const input = document.getElementById('nuevoGrupoInput');
+    if (select.value) {
+        input.value = select.value; // Transfiere el valor seleccionado al input
+    }
+}
+
+
+document.getElementById('inicioForm').addEventListener('submit', function(e) {
+    // Prevenir el comportamiento predeterminado del formulario
+    e.preventDefault();
+
+    // obtener un registro aleatorio
+    const enunciadoTextArea = document.getElementById('enunciado');
+    const ejercicio = document.getElementById('ejercicios').value;
+    registroActual = obtenerRegistroAleatorio(ejercicio);
+    enunciadoTextArea.value = registroActual[0];
+ 
+    document.getElementById('responseText').innerText = registroActual[0];
+  
+});
+
+</script>
+
+
+<div id="audioPlayerContainer"></div> <div id="audioPlayerContainerSol"></div>
+<button id="recordButton" style="width: 100%; height: 50px;">Pulsa para grabar/detener</button>
+
+
+<!-- Estilos para textarea y botón de envío -->
+<div id="textButtonContainer" style="margin-top: 10px;">
+    <textarea id="textInput" placeholder="Escribe tu texto aquí" rows="4"></textarea>
+    <button id="sendTextButton">Enviar Texto</button>
+</div>
+
+
+
+<div id="responseText" style="height: 250px; margin-top: 20px; border: 1px solid #ddd; padding: 10px; overflow-y:auto;"></div>
+<script>
+let recordButton = document.getElementById("recordButton");
+let chunks = [];
+let mediaRecorder;
+let isRecording = false;
+
+navigator.mediaDevices.getUserMedia({ audio: true })
+.then(stream => {
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = event => {
+        chunks.push(event.data);
+    };
+    mediaRecorder.onstop = () => {
+        console.log('mediaRecorder Detenido!!');
+        let blob = new Blob(chunks, { 'type': 'audio/ogg; codecs=opus' });
+        enviarAudioAlServidor(blob);
+        chunks = [];
+    };
+});
+
+recordButton.onclick = () => {
+    if (!isRecording) {
+        mediaRecorder.start();
+        isRecording = true;
+        recordButton.textContent = 'Grabando...';
+    } else {
+        mediaRecorder.stop();
+        isRecording = false;
+        recordButton.textContent = 'Pulsa para grabar/detener';
+    }
+};
+
+
+
+function enviarTexto(texto) {
+    updateResponseText(" ---> " + texto + " (sol: " + registroActual[1] + ")" + "\n");
+    obtenerYReproducir(texto, false);
+    obtenerYReproducir(registroActual[1]);
+}
+
+
+
+
+function enviarAudioAlServidor(blob) {
+    let formData = new FormData();
+    formData.append('file', blob, 'grabacion.ogg');
+
+    fetch('http://ia.javiergimenez.es:5500/transcribe', {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        updateResponseText(" ---> " + data.entrada + " (sol: " + registroActual[1] + ")" + "\n");
+     
+
+    })
+    .catch(error => {
+        console.error('Error al enviar el audio:', error);
+    });
+
+    obtenerYReproducir(registroActual[1]);
+
+    createAudioPlayerFromBlob(blob)
+}
+
+
+
+// Funcionalidad para enviar texto al servidor y limpiar el textarea
+document.getElementById("sendTextButton").onclick = () => {
+    let textInput = document.getElementById("textInput");
+    let texto = textInput.value;
+    if (texto) {
+        enviarTexto(texto);
+        textInput.value = ''; // Limpiar el textarea después de enviar
+    }
+};
+
+
+
+
+function updateResponseText(text) {
+    // document.getElementById('responseText').innerText += text;
+    textarea = document.getElementById('responseText')
+    textarea.innerText += text;
+    textarea.scrollTop = textarea.scrollHeight;
+}
+
+
+
+function obtenerYReproducir(texto, sol=true) {
+    console.log('Obteniendo audio para:', texto);
+    fetch('http://ia.javiergimenez.es:5500/audio', {
+
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ texto: texto })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.audio_base64) {            
+            playAudio(data.audio_base64, sol);
+        }
+    })
+    .catch(error => {
+        console.error('Error al obtener el audio:', error);
+    });
+}
+
+
+
+
+function playAudio(audioBase64, sol=true) {
+    let audioContainer=""
+    if (sol) {
+        audioContainer = document.getElementById('audioPlayerContainerSol');
+    } else {
+        audioContainer = document.getElementById('audioPlayerContainer');
+    }
+    audioContainer.innerHTML = ''; // Limpia el contenedor
+
+    let audioSrc = `data:audio/wav;base64,${audioBase64}`;
+    let audioPlayer = document.createElement('audio');
+    audioPlayer.src = audioSrc;
+    audioPlayer.controls = true;
+    audioPlayer.autoplay = false;
+
+    console.log('creando audio para solución.');
+    audioContainer.appendChild(audioPlayer);
+}
+
+function createAudioPlayer(base64Audio) {
+    let audioContainer = document.getElementById('audioPlayerContainer');
+    let audioSrc = `data:audio/wav;base64,${base64Audio}`;
+    let audioPlayer = document.createElement('audio');
+    audioPlayer.src = audioSrc;
+    audioPlayer.controls = true;
+    audioPlayer.autoplay = true;
+    audioContainer.innerHTML = '';
+    audioContainer.appendChild(audioPlayer);
+}
+
+function createAudioPlayerFromBlob(blob) {
+    let audioContainer = document.getElementById('audioPlayerContainer');
+    // Crea una URL de objeto para el Blob
+    let audioSrc = URL.createObjectURL(blob);
+    let audioPlayer = document.createElement('audio');
+    audioPlayer.src = audioSrc;
+    audioPlayer.controls = true;
+    audioPlayer.autoplay = false;
+    audioContainer.innerHTML = '';
+    audioContainer.appendChild(audioPlayer);
+}
+
+
+
+</script>
