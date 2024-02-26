@@ -121,7 +121,7 @@ div#textButtonContainer {
 }
 
 
-#nuevoGrupoSelect {
+#nuevoGrupoSelect, #ejercicioNuevoGrupoSelect {
     width: 100%; /* Aprovecha todo el ancho disponible */
     padding: 8px; /* Añade un relleno para mayor comodidad */
     margin-top: 4px; /* Espacio mínimo superior para separación */
@@ -129,8 +129,7 @@ div#textButtonContainer {
     font-size: 16px; /* Aumenta el tamaño del texto */
 }
 
-    <title>Refrescar Datos</title>
-    <style>
+    
         /* Estilo básico para el botón de refrescar */
         .btn-refrescar {
             background-color: #f5f5f5;
@@ -145,7 +144,12 @@ div#textButtonContainer {
             content: "\21BB"; /* Símbolo de flecha circular */
             margin-right: 5px;
         }
-    </style>
+
+#campoEspañol, #campoIngles, #campoGrupo {
+        width: 100%; /* Aprovecha todo el ancho disponible */
+        padding: 8px; /* Añade un relleno para mayor comodidad */
+        margin-top: 4px; /* Espacio mínimo superior para separación */
+}
 
 </style>
 </head>
@@ -169,7 +173,7 @@ let registros = []; // Almacena aquí todos los registros procesados
         return columnas.map(columna => columna.trim()); 
     });
     const tipos = new Set();
-    tipos.add('All'); // Añadir una opción predeterminada
+    //tipos.add('All'); // Añadir una opción predeterminada
     tipos.add('repaso'); // Añadir una opción siempre existente
 
     registros.forEach(registro => {
@@ -177,8 +181,11 @@ let registros = []; // Almacena aquí todos los registros procesados
         registro[2].split('/').forEach(tipo => tipos.add(tipo));
       }
     });
-    llenarSelector(Array.from(tipos), 'ejercicios');
     llenarSelector(Array.from(tipos), 'nuevoGrupoSelect'); // Actualiza para llenar el <select>
+    llenarSelector(Array.from(tipos), 'ejercicioNuevoGrupoSelect'); // Actualiza para llenar el <select>
+    //añadir al prinpio de la lista de tipos el valor 'All'
+    tipos.add('All'); // Añadir una opción predeterminada
+    llenarSelector(Array.from(tipos), 'ejercicios');
 
   }
 
@@ -205,7 +212,7 @@ let registros = []; // Almacena aquí todos los registros procesados
     function llenarSelector(tipos, elementoID) {
         const elemento = document.getElementById(elementoID);
         elemento.innerHTML = ''; // Limpiar opciones existentes
- 
+
         tipos.forEach(tipo => {
             const opcion = document.createElement('option');
             opcion.value = tipo;
@@ -220,6 +227,7 @@ let registros = []; // Almacena aquí todos los registros procesados
   let ejercicio = 'All'; // Variable para almacenar el tipo seleccionado
   function actualizarEjercicio(valorSeleccionado) {
     ejercicio = valorSeleccionado;
+    mostrarSiguiente()
     console.log('Ejercicio seleccionado:', ejercicio);
   }
 
@@ -255,6 +263,27 @@ function obtenerRegistroAleatorio(tipoSeleccionado) {
 //   indiceActual = indiceAleatorio
   return registrosFiltrados[indiceAleatorio];
 }
+
+
+function eliminarRegistro(Pregistro) {
+    // Encuentra el índice del registro para eliminar en 'registros' basado solo en los dos primeros campos
+    español = Pregistro[0]
+    ingles = Pregistro[1]
+    let indice = registros.findIndex(registro => 
+        registro[0] === español && registro[1] === ingles
+    );
+
+    // Verifica si se encontró el índice
+    if (indice !== -1) {
+        // Elimina el registro de 'registros' usando splice
+        registros.splice(indice, 1);
+        console.log('Registro eliminado correctamente.');
+    } else {
+        console.log('Registro no encontrado.');
+    }
+}
+
+
 
 
 
@@ -336,7 +365,8 @@ function arrayToCSVString(arrayDeArrays) {
     <!-- Primera fila con botones para añadir a repaso y eliminar del grupo -->
     <div>
         <button id="btnAñadirRepaso">Añadir a repaso</button>
-        <button id="btnEliminarRepaso">Eliminar a repaso</button>
+        <button id="btnEliminarRepaso">Eliminar de repaso</button>
+        <button id="btnEliminarRegistro">Eliminar registro</button>
         <button id="btnGuardarCambios">Guardar Cambios</button>
     </div>
     
@@ -357,8 +387,16 @@ function arrayToCSVString(arrayDeArrays) {
 
 let registroActual
 
+//document.getElementById('btnEliminarRegistro').addEventListener('click', eliminarRegistro(registroActual));
+document.getElementById('btnEliminarRegistro').addEventListener('click', function() {
+    eliminarRegistro(registroActual);
+});
 
-document.getElementById('btnGuardarCambios').addEventListener('click', guardarCambios);
+//document.getElementById('btnGuardarCambios').addEventListener('click', guardarCambios);
+document.getElementById('btnGuardarCambios').addEventListener('click', function() {
+    guardarCambios();
+});
+
 
 
 document.getElementById('btnAñadirRepaso').addEventListener('click', function() {
@@ -408,9 +446,27 @@ document.getElementById('btnAñadirNuevoGrupo').addEventListener('click', functi
 });
 
 
+function mostrarSiguiente() {
+    // obtener un registro aleatorio
+    const enunciadoTextArea = document.getElementById('enunciado');
+    const ejercicio = document.getElementById('ejercicios').value;
+    registroActual = obtenerRegistroAleatorio(ejercicio);
+    enunciadoTextArea.value = registroActual[0];
+ 
+    document.getElementById('responseText').innerText = registroActual[0];
+}
+
 function seleccionarGrupo() {
     const select = document.getElementById('nuevoGrupoSelect');
     const input = document.getElementById('nuevoGrupoInput');
+    if (select.value) {
+        input.value = select.value; // Transfiere el valor seleccionado al input
+    }
+}
+
+function seleccionarNuevoEjercicioGrupo() {
+    const select = document.getElementById('ejercicioNuevoGrupoSelect');
+    const input = document.getElementById('campoGrupo');
     if (select.value) {
         input.value = select.value; // Transfiere el valor seleccionado al input
     }
@@ -422,12 +478,7 @@ document.getElementById('inicioForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
     // obtener un registro aleatorio
-    const enunciadoTextArea = document.getElementById('enunciado');
-    const ejercicio = document.getElementById('ejercicios').value;
-    registroActual = obtenerRegistroAleatorio(ejercicio);
-    enunciadoTextArea.value = registroActual[0];
- 
-    document.getElementById('responseText').innerText = registroActual[0];
+    mostrarSiguiente()
   
 });
 
@@ -447,7 +498,59 @@ document.getElementById('inicioForm').addEventListener('submit', function(e) {
 
 
 <div id="responseText" style="height: 250px; margin-top: 20px; border: 1px solid #ddd; padding: 10px; overflow-y:auto;"></div>
+
+
+<p> AÑADIR UN NUEVO EJERCICIO: </p>
+<div id="nuevoEjercicio">
+    <div>
+        <label for="campoEspañol">Español:</label>
+        <input type="text" id="campoEspañol" name="campoEspañol">
+    </div>
+    <div>
+        <label for="campoIngles">Inglés:</label>
+        <input type="text" id="campoIngles" name="campoIngles">
+    </div>
+    <div>
+        <label for="campoGrupo">Grupo:</label>
+         <select id="ejercicioNuevoGrupoSelect" onchange="seleccionarNuevoEjercicioGrupo()">
+            <!-- Las opciones se llenarán dinámicamente -->
+        </select>        
+        <input type="text" id="campoGrupo" name="campoGrupo">
+        
+    </div>
+    <button id="btnCrearNuevoEjercicio">Crear nuevo ejercicio</button>
+</div>
+
+
 <script>
+
+document.getElementById('btnCrearNuevoEjercicio').addEventListener('click', function() {
+    // Obtiene los valores de los campos de texto
+    const español = document.getElementById('campoEspañol').value.trim();
+    const ingles = document.getElementById('campoIngles').value.trim();
+    
+    const grupo = document.getElementById('campoGrupo').value.trim();
+
+
+    // Valida que los campos no estén vacíos (ajusta según necesidades)
+    if (español && ingles && grupo) {
+        // Inserta los nuevos valores al final del array 'registros'
+        registros.push([español, ingles, grupo]);
+        console.log('Nuevo ejercicio creado:', español, ingles, grupo);
+        console.log('Registros actualizados:', registros);
+
+        // Opcional: Limpia los campos después de la inserción
+        document.getElementById('campoEspañol').value = '';
+        document.getElementById('campoIngles').value = '';
+        document.getElementById('campoGrupo').value = '';
+    } else {
+        // Opcional: Mensaje de error si algún campo está vacío
+        console.error('Todos los campos son requeridos para crear un nuevo ejercicio.');
+        alert('Por favor, rellena todos los campos.');
+    }
+});
+
+
 let recordButton = document.getElementById("recordButton");
 let chunks = [];
 let mediaRecorder;
