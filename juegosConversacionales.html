@@ -126,6 +126,16 @@ div#textButtonContainer {
 
 <script>
 
+// document.getElementById('btnAccesoMic').addEventListener('click', async () => {
+//     try {
+//         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+//         // Procesa el stream aquí
+//         console.log('Acceso al micrófono concedido');
+//     } catch (error) {
+//         console.error('Acceso al micrófono denegado:', error);
+//     }
+// });
+
 document.addEventListener('DOMContentLoaded', function() {
     window.scrollTo(0, 0); // Asegura que la página comience en la parte superior
     document.getElementById('ejercicios').focus(); // Luego establece el foco en el selector
@@ -157,7 +167,7 @@ assistant: what a shame!, the character was #personaje
     "guessing_game2": {
         systemPrompt: "You are #personaje, the fictional character. You have to take on the personality of that character and engage in conversations about your events and experiences.",
         saludo: "I'm #personaje, the fictional character. Ask me anything you want to know about me."
-    },    
+    },
     "guessing_game3": {
         systemPrompt: "This is a conversational game in which you have to guess a famous character. You should make questions to the user in order to guess the character that the user have choosen.",
         saludo: "Do you want to play? I will guess your choosen character by asking about it."
@@ -210,7 +220,7 @@ IMPORTANT: From now on I can only answer you "yes" or "no" and nothing more.`
 </form>
 
 
-<div style="margin-bottom: 20px; display: flex; align-items: center;"> 
+<div style="margin-bottom: 20px; display: flex; align-items: center;">
     <button id="downloadButton" style="background-color: #4CAF50; /* Color de fondo */
                                        color: white; /* Color del texto */
                                        padding: 15px 32px; /* Padding alrededor del texto */
@@ -249,7 +259,6 @@ document.getElementById('ejercicios').addEventListener('change', function() {
 document.getElementById('inicioForm').addEventListener('submit', function(e) {
     // Prevenir el comportamiento predeterminado del formulario
     e.preventDefault();
-
     // Obtener los valores de los campos del formulario
     const system_prompt = document.getElementById('system_prompt').value;
     const saludo = document.getElementById('saludo').value;
@@ -272,8 +281,7 @@ document.getElementById('inicioForm').addEventListener('submit', function(e) {
     .then(response => response.json())
     .then(data => {
         let saludo = data.message;
-        //document.getElementById('saludo').value = saludo;
-        obtenerYReproducirAudio(saludo)
+        obtenerYReproducirSaludo(saludo)
         updateResponseText(saludo + "\n")
         alert('Nuevo Juego iniciado');
     })
@@ -283,6 +291,8 @@ document.getElementById('inicioForm').addEventListener('submit', function(e) {
     });
 });
 </script>
+
+<!-- <button id="btnAccesoMic">Permitir acceso al micrófono</button> -->
 
 
 <div id="audioPlayerContainer"></div>
@@ -304,9 +314,6 @@ let chunks = [];
 let mediaRecorder;
 let isRecording = false;
 
-let audioQueue = [];
-let currentAudioIndex = 0; // Para controlar el orden de reproducción
-
 navigator.mediaDevices.getUserMedia({ audio: true })
 .then(stream => {
     mediaRecorder = new MediaRecorder(stream);
@@ -315,7 +322,6 @@ navigator.mediaDevices.getUserMedia({ audio: true })
     };
     mediaRecorder.onstop = () => {
         console.log('mediaRecorder Detenido!!');
-        currentAudioIndex = 0;
         let blob = new Blob(chunks, { 'type': 'audio/ogg; codecs=opus' });
         enviarAudioAlServidor(blob);
         chunks = [];
@@ -335,42 +341,47 @@ recordButton.onclick = () => {
 };
 
 
-function enviarAudioAlServidor(blob) {
+async function enviarAudioAlServidor(blob) {
     let formData = new FormData();
     formData.append('file', blob, 'grabacion.ogg');
 
-    trozoIndex = 0;
-
-    fetch('http://localhost:5500/transcribe', {
-        method: 'POST',
-        body: formData,
-    })
-    .then(response => response.json())
-    .then(data => {
+    try {
+        const response = await fetch('http://localhost:5500/transcribe', {
+            method: 'POST',
+            body: formData,
+        });
+        const data = await response.json();
         updateResponseText("\nyo: " + data.entrada + "\n\n" + "\n***********************************\n" + "respuesta: ");
-        let obtenerPartes = () => {
-            fetch('http://localhost:5500/get_next_part') // Cambia la URL según tu configuración
-            .then(response => response.json())
-            .then(partData => {
-                if (partData.output !== "") { // Mientras la parte de la respuesta no esté vacía
-                    trozo = partData.output;
-                    updateResponseText(trozo);
-                    obtenerYReproducirAudio(trozo, trozoIndex);
-                    trozoIndex++;
-                    obtenerPartes(); // Vuelve a llamar a obtenerPartes recursivamente
-                } 
-            })
-            .catch(error => {
-                console.error('Error al obtener la siguiente parte:', error);
-            });
-        };
 
-        obtenerPartes(); // Comienza a obtener las partes de la respuesta
-    })
-    .catch(error => {
+        // Reinicia el buffer de audio de manera más eficiente
+        audioBuffer = Array(currentAudioIndex).fill({});
+        currentAudioIndex = 0;
+
+        await obtenerPartes();
+    } catch (error) {
         console.error('Error al enviar el audio:', error);
-    });
+    }
 }
+
+async function obtenerPartes(indice = 0) {
+    try {
+        const response = await fetch(`http://localhost:5500/get_next_part?index=${indice}`);
+        const partData = await response.json();
+        if (partData.output !== "") {
+            let trozo = partData.output;
+            updateResponseText(trozo);
+
+            await obtenerYReproducirAudio(trozo, indice);
+            await obtenerPartes(indice + 1); // Llamada recursiva con el índice incrementado
+        }
+    } catch (error) {
+        console.error('Error al obtener la siguiente parte:', error);
+    }
+}
+
+// Asumiendo que obtenerYReproducirAudio ya fue optimizado como se mostró anteriormente
+
+
 
 
 // Funcionalidad para enviar texto al servidor y limpiar el textarea
@@ -383,45 +394,74 @@ document.getElementById("sendTextButton").onclick = () => {
     }
 };
 
-function enviarTextoAlServidor(texto) {
-    fetch('http://localhost:5500/texto', { // Asegúrate de usar la URL correcta
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ texto: texto })
-    })
-    .then(response => response.json())
-    .then(data => {
-        updateResponseText("\nyo: " + data.entrada + "\n\n" + "\n***********************************\n" + "respuesta: ");
-        
-        let indice = 0; // Inicializa el índice para las partes de la respuesta
 
-        let obtenerPartes = () => {
-            // Añade el índice como parámetro de la consulta
-            fetch(`http://localhost:5500/get_next_part?index=${indice}`) 
-            .then(response => response.json())
-            .then(partData => {
-                if (partData.output !== "") { // Mientras la parte de la respuesta no esté vacía
-                    let trozo = partData.output;
-                    updateResponseText(trozo);
-                    obtenerYReproducirAudio(trozo, indice);
 
-                    indice++; // Incrementa el índice para la próxima llamada
-                    obtenerPartes(); // Vuelve a llamar a obtenerPartes recursivamente con el nuevo índice
-                }
-            })
-            .catch(error => {
-                console.error('Error al obtener la siguiente parte:', error);
-            });
-        };
-
-        obtenerPartes(); // Comienza a obtener las partes de la respuesta
-    })
-    .catch(error => {
-        console.error('Error al enviar el texto:', error);
-    });
+let audioBuffer = [];
+// inicializa audioBuffer con 100 elementos vacíos
+for (let i = 0; i < 100; i++) {
+    audioBuffer.push({});
 }
+let milisegundosInicio = Date.now();
+
+let currentAudioIndex = 0; // Para controlar el orden de reproducción
+
+
+// Usamos async/await para simplificar la gestión de promesas
+async function enviarTextoAlServidor(texto) {
+    try {
+        const response = await fetch('http://localhost:5500/texto', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ texto: texto })
+        });
+        const data = await response.json();
+        updateResponseText("\nyo: " + data.entrada + "\n\n" + "\n***********************************\n" + "respuesta: ");
+
+        // Reinicia el buffer de audio de manera más eficiente
+        audioBuffer = Array(currentAudioIndex).fill({});
+        currentAudioIndex = 0;
+
+        await obtenerPartes();
+    } catch (error) {
+        console.error('Error al enviar el texto:', error);
+    }
+}
+
+// Función separada para manejar la obtención de partes de la respuesta
+// async function obtenerPartes(indice = 0) {
+//     try {
+//         const response = await fetch(`http://localhost:5500/get_next_part?index=${indice}`);
+//         const partData = await response.json();
+//         if (partData.output !== "") {
+//             let trozo = partData.output;
+//             updateResponseText(trozo);
+
+//             await obtenerYReproducirAudio(trozo, indice);
+//             await obtenerPartes(indice + 1); // Llamada recursiva con el índice incrementado
+//         }
+//     } catch (error) {
+//         console.error('Error al obtener la siguiente parte:', error);
+//     }
+// }
+
+// Optimizada para async/await
+async function obtenerYReproducirAudio(texto, index) {
+    try {
+        const response = await fetch('http://localhost:5500/audio', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ texto: texto })
+        });
+        const data = await response.json();
+        if (data.audio_base64) {
+            console.log('Enviando audio al buffer de reproducción, tamaño:', data.audio_base64.length, 'índice:', index);
+            addAudioClipToBuffer(data.audio_base64, index);
+        }
+    } catch (error) {
+        console.error('Error al obtener el audio:', error);
+    }
+}
+
 
 
 function updateResponseText(text) {
@@ -460,10 +500,8 @@ function createAudioAllPlayer(base64Audio) {
     audioContainer.appendChild(audioPlayer);
 }
 
-
-
-
-function obtenerYReproducirAudio(texto, index = 0) {
+function obtenerYReproducirSaludo(texto) {
+    console.log('Obteniendo audio para:', texto, 'microsegundos:', Date.now() - milisegundosInicio);
     fetch('http://localhost:5500/audio', {
 
         method: 'POST',
@@ -475,7 +513,8 @@ function obtenerYReproducirAudio(texto, index = 0) {
     .then(response => response.json())
     .then(data => {
         if (data.audio_base64) {
-            addAudioClipToBuffer(data.audio_base64, index);
+            console.log('Obteniendo audio, tamaño:', data.audio_base64.length, 'SALUDO', 'microsegundos:', Date.now()-milisegundosInicio);
+            playAudio(data.audio_base64);
         }
     })
     .catch(error => {
@@ -486,17 +525,27 @@ function obtenerYReproducirAudio(texto, index = 0) {
 
 
 
-audioBuffer = [""]*1000;
+
 function addAudioClipToBuffer(base64Audio, index) {
-    audioBuffer.push({ audio: base64Audio, index: index });
-    // Ordenar la cola por índice para mantener el orden correcto
-    audioBuffer.sort((a, b) => a.index - b.index);
-    playNextAudioClip();
+    audioBuffer[index] = { audio: base64Audio};
+    let audioPlayer = document.getElementById('audioPlayerContainer').querySelector('audio');
+    console.log('Despues de meter en Buffer, VIENDO si ejecuto play con indice:', index, 'pausa:',audioPlayer.paused, 'currentAudioIndex', currentAudioIndex,'microsegundos:', Date.now()-milisegundosInicio);
+    if (audioPlayer.paused && currentAudioIndex == index) {
+        playNextAudioClip();
+    }
 }
 
+function esObjetoVacio(obj) {
+  return Object.keys(obj).length === 0;
+}
+
+
 function playNextAudioClip() {
-    if (audioQueue.length > 0 && audioQueue[0].index === currentAudioIndex) {
-        const audioData = audioQueue.shift();
+    console.log('Entrando en playNextAudioClip para ver si reproducimos audio con currentAudioIndex:', currentAudioIndex, 'microsegundos:', Date.now()-milisegundosInicio, 'esObjetoVacio:', esObjetoVacio(audioBuffer[currentAudioIndex]));
+    if (!esObjetoVacio(audioBuffer[currentAudioIndex])) {
+        console.log('Iniciando variables para Reproducion audio concurrentAudioIndex:', currentAudioIndex, 'tamaño:', audioBuffer[currentAudioIndex].audio.length, 'microsegundos:', Date.now()-milisegundosInicio);
+        const audioData = audioBuffer[currentAudioIndex];
+        audioBuffer[currentAudioIndex] = {}; // Limpia el elemento actual
         currentAudioIndex++;
 
         let audioContainer = document.getElementById('audioPlayerContainer');
@@ -508,12 +557,26 @@ function playNextAudioClip() {
         audioPlayer.controls = true;
         audioPlayer.autoplay = true;
 
+        console.log('Justo antes de APPENDCHILD Reproduciendo audio currentAudioIndex:', currentAudioIndex, 'microsegundos:', Date.now()-milisegundosInicio);
         audioContainer.appendChild(audioPlayer);
 
         audioPlayer.onended = playNextAudioClip;
     }
 }
 
+function playAudio(audioBase64) {
+    let audioContainer = document.getElementById('audioPlayerContainer');
+    audioContainer.innerHTML = ''; // Limpia el contenedor
+
+    let audioSrc = `data:audio/wav;base64,${audioBase64}`;
+    let audioPlayer = document.createElement('audio');
+    audioPlayer.src = audioSrc;
+    audioPlayer.controls = true;
+    audioPlayer.autoplay = true;
+
+    console.log('Reproduciendo saludo! Justo antes de APPENDCHILD', 'microsegundos:', Date.now()-milisegundosInicio);
+    audioContainer.appendChild(audioPlayer);
+}
 
 function createAudioPlayer(base64Audio) {
     let audioContainer = document.getElementById('audioPlayerContainer');
@@ -526,6 +589,7 @@ function createAudioPlayer(base64Audio) {
     audioContainer.appendChild(audioPlayer);
 }
 
+obtenerYReproducirSaludo("Wellcom to Conversational Games!")
 
 
 

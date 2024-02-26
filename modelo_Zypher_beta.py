@@ -185,7 +185,7 @@ estado_generacion = EstadoGeneracion()
 
 generate_lock = Lock()
 
-def generate_in_file_parts(historico, ai, user, input_text, max_additional_tokens=2000, stop=["</s>","user:"], short_answer=False, streaming=True, printing=True):
+def generate_in_file_parts(historico, ai, user, input_text, max_additional_tokens=2000, stop=["</s>","user:","<|user|>"], short_answer=False, streaming=True, printing=True):
     global estado_generacion
     
     # global generate_lock
