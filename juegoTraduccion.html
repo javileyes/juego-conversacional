@@ -165,6 +165,26 @@ let registros = []; // Almacena aquí todos los registros procesados
 
   }
 
+
+  function guardarCambios() {
+    // Supongamos que 'registros' contiene los datos modificados que queremos guardar
+    fetch('http://localhost:5500/save-translations-file', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(registros),  // 'registros' debe ser el array de tus datos
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data.message); // Mensaje de éxito
+    })
+    .catch((error) => {
+        console.error('Error:', error); // Manejo de errores
+    });
+}
+
+
     function llenarSelector(tipos, elementoID) {
         const elemento = document.getElementById(elementoID);
         elemento.innerHTML = ''; // Limpiar opciones existentes
@@ -292,6 +312,7 @@ function eliminaGrupo(indice, grupo) {
     <div>
         <button id="btnAñadirRepaso">Añadir a repaso</button>
         <button id="btnEliminarRepaso">Eliminar a repaso</button>
+        <button id="btnGuardarCambios">Guardar Cambios</button>
     </div>
     
     <p> AÑADIR O ELIMINAR ESTE EJERCICIO DE UN GRUPO: </p>
@@ -310,6 +331,9 @@ function eliminaGrupo(indice, grupo) {
 
 
 let registroActual
+
+
+document.getElementById('btnGuardarCambios').addEventListener('click', guardarCambios);
 
 
 document.getElementById('btnAñadirRepaso').addEventListener('click', function() {
