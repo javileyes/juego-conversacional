@@ -60,6 +60,11 @@
     margin-bottom: 20px; /* Espacio antes del botón de grabación */
 }
 
+#audioPlayerContainerSol {
+    /* Añade estilos específicos si planeas insertar un reproductor de audio */
+    margin-bottom: 20px; /* Espacio antes del botón de grabación */
+}
+
 #recordButton {
     background-color: #f44336; /* Color rojo para la grabación */
     color: white;
@@ -218,33 +223,10 @@ function obtenerRegistroAleatorio(tipoSeleccionado) {
         </select>
        
     </div>
-    <button type="submit">EMPEZAR!</button>
+    <button type="submit">Siguiente!</button>
 
 </form>
 
-
-<div style="margin-bottom: 20px; display: flex; align-items: center;"> 
-    <button id="downloadButton" style="background-color: #4CAF50; /* Color de fondo */
-                                       color: white; /* Color del texto */
-                                       padding: 15px 32px; /* Padding alrededor del texto */
-                                       text-align: center; /* Alinea el texto al centro */
-                                       text-decoration: none; /* Elimina la decoración del texto */
-                                       display: inline-block; /* Hace que el botón sea un bloque en línea */
-                                       font-size: 16px; /* Tamaño del texto */
-                                       margin: 4px 2px; /* Margen alrededor del botón */
-                                       cursor: pointer; /* Cambia el cursor a un puntero */
-                                       border: none; /* Elimina el borde */
-                                       border-radius: 8px; /* Redondea las esquinas del botón */
-    ">Descargar Conversación</button>
-    <div id="audioPlayerAllContainer"></div>
-</div>
-
-
-<script>
-    document.getElementById('downloadButton').addEventListener('click', function() {
-        obtenerYReproducirAll(); // Llama a la función en vez de redirigir
-    });
-</script>
 
 
 <script>
@@ -269,7 +251,7 @@ document.getElementById('inicioForm').addEventListener('submit', function(e) {
 </script>
 
 
-<div id="audioPlayerContainer"></div>
+<div id="audioPlayerContainer"></div> <div id="audioPlayerContainerSol"></div>
 <button id="recordButton" style="width: 100%; height: 50px;">Pulsa para grabar/detener</button>
 
 
@@ -318,6 +300,8 @@ recordButton.onclick = () => {
 
 function enviarTexto(texto) {
     updateResponseText(" ---> " + texto + " (sol: " + registroActual[1] + ")" + "\n");
+    obtenerYReproducir(texto, false);
+    obtenerYReproducir(registroActual[1]);
 }
 
 
@@ -333,13 +317,17 @@ function enviarAudioAlServidor(blob) {
     })
     .then(response => response.json())
     .then(data => {
-        updateResponseText(" ---> " + data.entrada);
+        updateResponseText(" ---> " + data.entrada + " (sol: " + registroActual[1] + ")" + "\n");
      
 
     })
     .catch(error => {
         console.error('Error al enviar el audio:', error);
     });
+
+    obtenerYReproducir(registroActual[1]);
+
+    createAudioPlayerFromBlob(blob)
 }
 
 
@@ -366,35 +354,8 @@ function updateResponseText(text) {
 
 
 
-function obtenerYReproducirAll() {
-    fetch('http://localhost:5500/all_conversation', {
-        method: 'GET',
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.audio_base64) {
-            createAudioAllPlayer(data.audio_base64);
-        }
-    })
-    .catch(error => {
-        console.error('Error al obtener el audio:', error);
-    });
-}
-
-
-function createAudioAllPlayer(base64Audio) {
-    let audioContainer = document.getElementById('audioPlayerAllContainer');
-    let audioSrc = `data:audio/wav;base64,${base64Audio}`;
-    let audioPlayer = document.createElement('audio');
-    audioPlayer.src = audioSrc;
-    audioPlayer.controls = true;
-    audioPlayer.autoplay = true;
-    audioContainer.innerHTML = '';
-    audioContainer.appendChild(audioPlayer);
-}
-
-function obtenerYReproducir(texto) {
-    console.log('Obteniendo audio para:', texto, 'microsegundos:', Date.now() - milisegundosInicio);
+function obtenerYReproducir(texto, sol=true) {
+    console.log('Obteniendo audio para:', texto);
     fetch('http://localhost:5500/audio', {
 
         method: 'POST',
@@ -405,9 +366,8 @@ function obtenerYReproducir(texto) {
     })
     .then(response => response.json())
     .then(data => {
-        if (data.audio_base64) {
-            console.log('Obteniendo audio, tamaño:', data.audio_base64.length, 'SALUDO', 'microsegundos:', Date.now()-milisegundosInicio);
-            playAudio(data.audio_base64);
+        if (data.audio_base64) {            
+            playAudio(data.audio_base64, sol);
         }
     })
     .catch(error => {
@@ -441,57 +401,22 @@ function obtenerYReproducirAudio(texto, index) {
 
 
 
-
-
-function addAudioClipToBuffer(base64Audio, index) {
-    audioBuffer[index] = { audio: base64Audio};
-    let audioPlayer = document.getElementById('audioPlayerContainer').querySelector('audio');
-    console.log('Despues de meter en Buffer, VIENDO si ejecuto play con indice:', index, 'pausa:',audioPlayer.paused, 'currentAudioIndex', currentAudioIndex,'microsegundos:', Date.now()-milisegundosInicio);
-    if (audioPlayer.paused && currentAudioIndex == index) {
-        playNextAudioClip();
+function playAudio(audioBase64, sol=true) {
+    let audioContainer=""
+    if (sol) {
+        audioContainer = document.getElementById('audioPlayerContainerSol');
+    } else {
+        audioContainer = document.getElementById('audioPlayerContainer');
     }
-}
-
-function esObjetoVacio(obj) {
-  return Object.keys(obj).length === 0;
-}
-
-
-function playNextAudioClip() {
-    console.log('Entrando en playNextAudioClip para ver si reproducimos audio con currentAudioIndex:', currentAudioIndex, 'microsegundos:', Date.now()-milisegundosInicio, 'esObjetoVacio:', esObjetoVacio(audioBuffer[currentAudioIndex]));
-    if (!esObjetoVacio(audioBuffer[currentAudioIndex])) {
-        console.log('Iniciando variables para Reproducion audio concurrentAudioIndex:', currentAudioIndex, 'tamaño:', audioBuffer[currentAudioIndex].audio.length, 'microsegundos:', Date.now()-milisegundosInicio);
-        const audioData = audioBuffer[currentAudioIndex];
-        audioBuffer[currentAudioIndex] = {}; // Limpia el elemento actual
-        currentAudioIndex++;
-
-        let audioContainer = document.getElementById('audioPlayerContainer');
-        audioContainer.innerHTML = ''; // Limpia el contenedor
-
-        let audioSrc = `data:audio/wav;base64,${audioData.audio}`;
-        let audioPlayer = document.createElement('audio');
-        audioPlayer.src = audioSrc;
-        audioPlayer.controls = true;
-        audioPlayer.autoplay = true;
-
-        console.log('Justo antes de APPENDCHILD Reproduciendo audio currentAudioIndex:', currentAudioIndex, 'microsegundos:', Date.now()-milisegundosInicio);
-        audioContainer.appendChild(audioPlayer);
-
-        audioPlayer.onended = playNextAudioClip;
-    }
-}
-
-function playAudio(audioBase64) {
-    let audioContainer = document.getElementById('audioPlayerContainer');
     audioContainer.innerHTML = ''; // Limpia el contenedor
 
     let audioSrc = `data:audio/wav;base64,${audioBase64}`;
     let audioPlayer = document.createElement('audio');
     audioPlayer.src = audioSrc;
     audioPlayer.controls = true;
-    audioPlayer.autoplay = true;
+    audioPlayer.autoplay = false;
 
-    console.log('Reproduciendo saludo! Justo antes de APPENDCHILD', 'microsegundos:', Date.now()-milisegundosInicio);
+    console.log('creando audio para solución.');
     audioContainer.appendChild(audioPlayer);
 }
 
@@ -505,6 +430,19 @@ function createAudioPlayer(base64Audio) {
     audioContainer.innerHTML = '';
     audioContainer.appendChild(audioPlayer);
 }
+
+function createAudioPlayerFromBlob(blob) {
+    let audioContainer = document.getElementById('audioPlayerContainer');
+    // Crea una URL de objeto para el Blob
+    let audioSrc = URL.createObjectURL(blob);
+    let audioPlayer = document.createElement('audio');
+    audioPlayer.src = audioSrc;
+    audioPlayer.controls = true;
+    audioPlayer.autoplay = false;
+    audioContainer.innerHTML = '';
+    audioContainer.appendChild(audioPlayer);
+}
+
 
 
 
