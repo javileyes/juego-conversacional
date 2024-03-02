@@ -1,0 +1,78 @@
+# Licencia MIT
+
+Derechos de autor (c) 2024 Javier Giménez Moya
+
+Por la presente se concede permiso, libre de cargos, a cualquier persona que obtenga una copia
+de este software y de los archivos de documentación asociados (el "Software"), para tratar
+el Software sin restricción, incluyendo sin limitación los derechos a usar, copiar, modificar,
+fusionar, publicar, distribuir, sublicenciar, y/o vender copias del Software, y para permitir a las personas a las que se les proporcione el Software hacer lo mismo, sujeto a las siguientes
+condiciones:
+
+El aviso de derechos de autor anterior y este aviso de permiso se incluirán en todas las copias o porciones sustanciales del Software.
+
+EL SOFTWARE SE PROPORCIONA "TAL CUAL", SIN GARANTÍA DE NINGÚN TIPO, EXPRESA OIMPLÍCITA, INCLUYENDO PERO NO LIMITADO A LAS GARANTÍAS DE COMERCIALIZACIÓN, APTITUD PARA UN PROPÓSITO PARTICULAR Y NO INFRACCIÓN. EN NINGÚN CASO LOS AUTORES O TITULARES DE COPYRIGHT SERÁN RESPONSABLES POR CUALQUIER RECLAMO, DAÑOS U OTRAS RESPONSABILIDADES, YA SEA EN UNA ACCIÓN DE CONTRATO, TORTURA U OTRO TIPO, QUE SURJA DE, FUERA DE O EN CONEXIÓN CON EL SOFTWARE O EL USO U OTROS TRATOS EN EL
+SOFTWARE.
+
+Además, se requiere una atribución adecuada a Javier Giménez Moya en cualquier trabajo que utilice, incorpore o derive de este software. Esta atribución debe realizarse en cualquier material promocional o documentación asociada con dicho trabajo.
+
+
+# citación
+
+@software{javier_gimenez_moya_2024_tu_proyecto,
+    title = "{Juegos Conversacionales}: Herramienta educativa para aprender a hablar inglés mediante Juegos conversacionales guiados por un chatbot de voz y texto",
+    author = "Giménez Moya, Javier",
+    month = mar,
+    year = "2024",
+    version = "1.0",
+    publisher = "{Trabajo Fin de Master en VIU (Universidad Internacional de Valencia)}",
+    address = "Águilas, Spain",
+    howpublished = "\url{https://github.com/javileyes/juego-conversacional}"
+}
+
+
+# citaciones
+
+Este proyecto utiliza "fairseq", un toolkit de síntesis de voz escalable e integrable:
+@inproceedings{wang-etal-2021-fairseq,
+    title = "fairseq S{\^{}}2: A Scalable and Integrable Speech Synthesis Toolkit",
+    author = "Wang, Changhan  and
+      Hsu, Wei-Ning  and
+      Adi, Yossi  and
+      Polyak, Adam  and
+      Lee, Ann  and
+      Chen, Peng-Jen  and
+      Gu, Jiatao  and
+      Pino, Juan",
+    booktitle = "Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing: System Demonstrations",
+    month = nov,
+    year = "2021",
+    address = "Online and Punta Cana, Dominican Republic",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2021.emnlp-demo.17",
+    doi = "10.18653/v1/2021.emnlp-demo.17",
+    pages = "143--152",
+}
+
+
+También un transcriptor de voz a texto llamado "Whisper":
+@misc{radford2022whisper,
+  doi = {10.48550/ARXIV.2212.04356},
+  url = {https://arxiv.org/abs/2212.04356},
+  author = {Radford, Alec and Kim, Jong Wook and Xu, Tao and Brockman, Greg and McLeavey, Christine and Sutskever, Ilya},
+  title = {Robust Speech Recognition via Large-Scale Weak Supervision},
+  publisher = {arXiv},
+  year = {2022},
+  copyright = {arXiv.org perpetual, non-exclusive license}
+}
+
+
+Y Un LLM de generación de texto basado en "mistral 7b" llamado "Zephyr":
+
+@misc{tunstall2023zephyr,
+      title={Zephyr: Direct Distillation of LM Alignment}, 
+      author={Lewis Tunstall and Edward Beeching and Nathan Lambert and Nazneen Rajani and Kashif Rasul and Younes Belkada and Shengyi Huang and Leandro von Werra and Clémentine Fourrier and Nathan Habib and Nathan Sarrazin and Omar Sanseviero and Alexander M. Rush and Thomas Wolf},
+      year={2023},
+      eprint={2310.16944},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+}

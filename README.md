@@ -52,3 +52,66 @@ python server_zephyr.py --short "You are the CEO of a consulting company called 
 ```bash
 python server_zephyr.py -es --short "You are the CEO of a consulting company called mAgIc, dedicated to finding artificial intelligence solutions for companies. You are interviewing a candidate to work for the company, you are interested in programming skills, mathematics, data science, AI and especially NLP. Ask questions about all this and probe. If the candidate says something wrong let them know. After 4 questions if most were good responses you must say 'CONGRATULATION YOU ARE IN OUR TEAM!!' if there was a bad response then you must say 'The interview is finished, thanks for come' IMPORTANT: if the interviewee is rude then you must say 'go away, close the door when go out'" "Good morning, have a seat, tell me your name."
 ```
+
+
+
+## citaciones
+
+Este proyecto utiliza `fairseq`, un toolkit de síntesis de voz escalable e integrable:
+@inproceedings{wang-etal-2021-fairseq,
+    title = "fairseq S{\^{}}2: A Scalable and Integrable Speech Synthesis Toolkit",
+    author = "Wang, Changhan  and
+      Hsu, Wei-Ning  and
+      Adi, Yossi  and
+      Polyak, Adam  and
+      Lee, Ann  and
+      Chen, Peng-Jen  and
+      Gu, Jiatao  and
+      Pino, Juan",
+    booktitle = "Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing: System Demonstrations",
+    month = nov,
+    year = "2021",
+    address = "Online and Punta Cana, Dominican Republic",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2021.emnlp-demo.17",
+    doi = "10.18653/v1/2021.emnlp-demo.17",
+    pages = "143--152",
+}
+
+
+También un transcriptor de voz a texto llamado Whisper:
+@misc{radford2022whisper,
+  doi = {10.48550/ARXIV.2212.04356},
+  url = {https://arxiv.org/abs/2212.04356},
+  author = {Radford, Alec and Kim, Jong Wook and Xu, Tao and Brockman, Greg and McLeavey, Christine and Sutskever, Ilya},
+  title = {Robust Speech Recognition via Large-Scale Weak Supervision},
+  publisher = {arXiv},
+  year = {2022},
+  copyright = {arXiv.org perpetual, non-exclusive license}
+}
+
+
+Y Un LLM de generación de texto basado en mistral 7b llamado Zephyr:
+
+@misc{tunstall2023zephyr,
+      title={Zephyr: Direct Distillation of LM Alignment}, 
+      author={Lewis Tunstall and Edward Beeching and Nathan Lambert and Nazneen Rajani and Kashif Rasul and Younes Belkada and Shengyi Huang and Leandro von Werra and Clémentine Fourrier and Nathan Habib and Nathan Sarrazin and Omar Sanseviero and Alexander M. Rush and Thomas Wolf},
+      year={2023},
+      eprint={2310.16944},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+}
+
+
+## citación
+
+@software{javier_gimenez_moya_2024_tu_proyecto,
+    title = "{Juegos Conversacionales}: Herramienta educativa para aprender a hablar inglés mediante Juegos conversacionales guiados por un chatbot de voz y texto",
+    author = "Giménez Moya, Javier",
+    month = mar,
+    year = "2024",
+    version = "1.0",
+    publisher = "{Trabajo Fin de Master en VIU (Universidad Internacional de Valencia)}",
+    address = "Águilas, Spain",
+    howpublished = "\url{https://github.com/javileyes/juego-conversacional}"
+}
