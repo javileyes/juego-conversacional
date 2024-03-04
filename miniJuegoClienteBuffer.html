@@ -334,7 +334,7 @@ function enviarAudioAlServidor(blob) {
     let formData = new FormData();
     formData.append('file', blob, 'grabacion.ogg');
 
-    fetch('http://localhost:5500/transcribe', {
+    fetch('http://localhost:5500/only_transcribe', {
         method: 'POST',
         body: formData,
     })
@@ -600,6 +600,6 @@ function createAudioPlayer(base64Audio) {
 }
 
 
-
+obtenerYReproducirSaludo("Wellcom to Conversational Games!")
 
 </script>
