@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 from threading import Lock
 import threading
@@ -78,7 +78,8 @@ print(f"{ai}:", saludo)
 # Crea un bloqueo para proteger el código contra la concurrencia a la hora de transcribir
 transcribe_lock = Lock()
 
-generate_lock = Lock()
+
+# generate_lock = Lock()
 
 app = Flask(__name__)
 # app.config['MAX_CONTENT_LENGTH'] = 30 * 1024 * 1024  # 30 MB
@@ -132,6 +133,32 @@ def print_strings():
     # Retorna una respuesta para indicar que se recibieron y procesaron los datos
     return jsonify({"message": saludo}), 200
 
+
+@app.route('/get-translations-file', methods=['GET'])
+def get_translations():
+    return send_from_directory(directory='.', path='translations.csv', as_attachment=True)
+
+import csv
+import shutil
+@app.route('/save-translations-file', methods=['POST'])
+def save_translations():
+    data = request.json  # Asume que el cliente envía los datos como JSON
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+    
+    try:
+        # Hace una copia de seguridad del archivo translations.csv antes de modificarlo
+        shutil.copy('translations.csv', 'translations.csv.bak')
+
+        # Abre el archivo translations.csv para escribir y actualiza con los datos recibidos
+        with open('translations.csv', mode='w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.writer(csvfile, delimiter='#')
+            for row in data:
+                writer.writerow(row)
+                
+        return jsonify({'message': 'File successfully saved'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/all_conversation', methods=['GET'])
@@ -247,6 +274,45 @@ def transcribe_audio():
     # Iniciar la generación de chat en un hilo aparte
     thread = threading.Thread(target=generate_chat_background, args=(transcripcion, historico, ai, user, short_answer))
     thread.start()
+
+    # Inicia el proceso de adición del audio .ogg en segundo plano, considerando su conversión a .mp3
+    add_audio_to_conversation_async(ogg_filepath)
+
+    # La respuesta ya no incluirá 'output' porque se generará en segundo plano
+    return jsonify(entrada=transcripcion, entrada_traducida="")
+
+
+@app.route('/only_transcribe', methods=['POST'])
+def only_transcribe_audio():
+    print("Transcribiendo audio...")
+    global historico
+    global user
+    global ai
+
+    if 'file' not in request.files:
+        return jsonify(error="No file part"), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify(error="No selected file"), 400
+
+    timestamp = int(time.time() * 1000)
+    ogg_filepath = f"received_audio_{timestamp}.ogg"
+    file.save(ogg_filepath)
+
+    start_transcribe_time = time.time()
+    with transcribe_lock:
+        transcripcion = modelWhisper.transcribe(ogg_filepath, fp16=False, language=idioma)
+        transcripcion = transcripcion["text"]
+    end_transcribe_time = time.time()
+    transcribe_duration = end_transcribe_time - start_transcribe_time
+    print(f"Transcripción completada en {transcribe_duration} segundos")
+
+    print("transcripción:", transcripcion)
+
+    # Iniciar la generación de chat en un hilo aparte
+    # thread = threading.Thread(target=generate_chat_background, args=(transcripcion, historico, ai, user, short_answer))
+    # thread.start()
 
     # Inicia el proceso de adición del audio .ogg en segundo plano, considerando su conversión a .mp3
     add_audio_to_conversation_async(ogg_filepath)

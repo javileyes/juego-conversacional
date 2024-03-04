@@ -121,7 +121,7 @@ div#textButtonContainer {
 }
 
 
-#nuevoGrupoSelect {
+#nuevoGrupoSelect, #ejercicioNuevoGrupoSelect {
     width: 100%; /* Aprovecha todo el ancho disponible */
     padding: 8px; /* Añade un relleno para mayor comodidad */
     margin-top: 4px; /* Espacio mínimo superior para separación */
@@ -129,6 +129,27 @@ div#textButtonContainer {
     font-size: 16px; /* Aumenta el tamaño del texto */
 }
 
+    
+        /* Estilo básico para el botón de refrescar */
+        .btn-refrescar {
+            background-color: #f5f5f5;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        /* Icono de refrescar utilizando una entidad HTML */
+        .btn-refrescar:before {
+            content: "\21BB"; /* Símbolo de flecha circular */
+            margin-right: 5px;
+        }
+
+#campoEspañol, #campoIngles, #campoGrupo {
+        width: 100%; /* Aprovecha todo el ancho disponible */
+        padding: 8px; /* Añade un relleno para mayor comodidad */
+        margin-top: 4px; /* Espacio mínimo superior para separación */
+}
 
 </style>
 </head>
@@ -152,7 +173,7 @@ let registros = []; // Almacena aquí todos los registros procesados
         return columnas.map(columna => columna.trim()); 
     });
     const tipos = new Set();
-    tipos.add('All'); // Añadir una opción predeterminada
+    //tipos.add('All'); // Añadir una opción predeterminada
     tipos.add('repaso'); // Añadir una opción siempre existente
 
     registros.forEach(registro => {
@@ -160,8 +181,11 @@ let registros = []; // Almacena aquí todos los registros procesados
         registro[2].split('/').forEach(tipo => tipos.add(tipo));
       }
     });
-    llenarSelector(Array.from(tipos), 'ejercicios');
     llenarSelector(Array.from(tipos), 'nuevoGrupoSelect'); // Actualiza para llenar el <select>
+    llenarSelector(Array.from(tipos), 'ejercicioNuevoGrupoSelect'); // Actualiza para llenar el <select>
+    //añadir al prinpio de la lista de tipos el valor 'All'
+    tipos.add('All'); // Añadir una opción predeterminada
+    llenarSelector(Array.from(tipos), 'ejercicios');
 
   }
 
@@ -178,6 +202,7 @@ let registros = []; // Almacena aquí todos los registros procesados
     .then(response => response.json())
     .then(data => {
         console.log(data.message); // Mensaje de éxito
+        alert(data.message);
     })
     .catch((error) => {
         console.error('Error:', error); // Manejo de errores
@@ -188,7 +213,7 @@ let registros = []; // Almacena aquí todos los registros procesados
     function llenarSelector(tipos, elementoID) {
         const elemento = document.getElementById(elementoID);
         elemento.innerHTML = ''; // Limpiar opciones existentes
- 
+
         tipos.forEach(tipo => {
             const opcion = document.createElement('option');
             opcion.value = tipo;
@@ -203,11 +228,12 @@ let registros = []; // Almacena aquí todos los registros procesados
   let ejercicio = 'All'; // Variable para almacenar el tipo seleccionado
   function actualizarEjercicio(valorSeleccionado) {
     ejercicio = valorSeleccionado;
+    mostrarSiguiente()
     console.log('Ejercicio seleccionado:', ejercicio);
   }
 
 
-let indiceActual = -1; // Variable para almacenar el índice del registro actual
+//let indiceActual = -1; // Variable para almacenar el índice del registro actual
 
 // Función para obtener un registro aleatorio que contenga el valor seleccionado como un string completo en la tercera columna
 function obtenerRegistroAleatorio(tipoSeleccionado) {
@@ -235,21 +261,42 @@ function obtenerRegistroAleatorio(tipoSeleccionado) {
   
   // Selecciona uno de los registros filtrados al azar y lo devuelve
   const indiceAleatorio = Math.floor(Math.random() * registrosFiltrados.length);
-  indiceActual = indiceAleatorio
+//   indiceActual = indiceAleatorio
   return registrosFiltrados[indiceAleatorio];
 }
 
 
+function eliminarRegistro(Pregistro) {
+    // Encuentra el índice del registro para eliminar en 'registros' basado solo en los dos primeros campos
+    español = Pregistro[0]
+    ingles = Pregistro[1]
+    let indice = registros.findIndex(registro => 
+        registro[0] === español && registro[1] === ingles
+    );
+
+    // Verifica si se encontró el índice
+    if (indice !== -1) {
+        // Elimina el registro de 'registros' usando splice
+        registros.splice(indice, 1);
+        console.log('Registro eliminado correctamente.');
+    } else {
+        console.log('Registro no encontrado.');
+    }
+}
+
+
+
+
 
 // Función para añadir un grupo a la tercera columna del registro especificado por el índice
-function añadirGrupo(indice, grupo) {
+function añadirGrupo(registro, grupo) {
   // Verifica que el índice esté dentro del rango de los registros cargados
-  if (indice >= 0 && indice < registros.length) {
+  if (registro) {
     // Divide la tercera columna por '/', elimina espacios en blanco de los extremos, y verifica si el grupo ya está presente
-    let grupos = registros[indice][2].split('/').map(g => g.trim());
+    let grupos = registro[2].split('/').map(g => g.trim());
     if (!grupos.includes(grupo)) {
       grupos.push(grupo); // Añade el nuevo grupo
-      registros[indice][2] = grupos.join('/'); // Reconstruye la tercera columna y actualiza el registro
+      registro[2] = grupos.join('/'); // Reconstruye la tercera columna y actualiza el registro
       return true; // Indica que el grupo fue añadido exitosamente
     } else {
       return false; // Indica que el grupo ya estaba presente
@@ -261,14 +308,14 @@ function añadirGrupo(indice, grupo) {
 }
 
 // Función para eliminar un grupo de la tercera columna del registro especificado por el índice
-function eliminaGrupo(indice, grupo) {
+function eliminaGrupo(registro, grupo) {
   // Verifica que el índice esté dentro del rango de los registros cargados
-  if (indice >= 0 && indice < registros.length) {
+  if (registro) {
     // Divide la tercera columna por '/', elimina espacios en blanco de los extremos, y verifica si el grupo existe
-    let grupos = registros[indice][2].split('/').map(grupo => grupo.trim());
+    let grupos = registro[2].split('/').map(grupo => grupo.trim());
     if (grupos.includes(grupo)) {
       grupos = grupos.filter(g => g !== grupo); // Elimina el grupo
-      registros[indice][2] = grupos.join('/'); // Reconstruye la tercera columna y actualiza el registro
+      registro[2] = grupos.join('/'); // Reconstruye la tercera columna y actualiza el registro
       return true; // Indica que el grupo fue eliminado exitosamente
     } else {
       return false; // Indica que el grupo no se encontró
@@ -281,10 +328,17 @@ function eliminaGrupo(indice, grupo) {
 
 
 
+function arrayToCSVString(arrayDeArrays) {
+    // Mapea cada sub-array a un string, uniendo los campos con '#'
+    const lineas = arrayDeArrays.map(registro => registro.join('#'));
+    // Une todas las líneas con saltos de línea para formar el string completo del CSV
+    const csvString = lineas.join('\n');
+    return csvString;
+}
 
 
   // Llama a cargarCSVDesdeServidor al cargar la página
-  window.addEventListener('load', cargarCSVDesdeServidor);
+ // window.addEventListener('load', cargarCSVDesdeServidor);
 
 
 
@@ -297,7 +351,8 @@ function eliminaGrupo(indice, grupo) {
         <textarea id="enunciado" name="enunciado" rows="1" cols="100"></textarea>
     </div>
     <div>
-        <label for="ejercicios">Juegos:</label><br>
+        <label for="ejercicios">Juegos:</label> <button class="btn-refrescar" onclick="procesarCSV(arrayToCSVString(registros))">Refrescar</button>
+<br>
         <select id="ejercicios" onchange="actualizarEjercicio(this.value)">
         <!-- Las opciones se llenarán dinámicamente -->
         </select>
@@ -311,7 +366,8 @@ function eliminaGrupo(indice, grupo) {
     <!-- Primera fila con botones para añadir a repaso y eliminar del grupo -->
     <div>
         <button id="btnAñadirRepaso">Añadir a repaso</button>
-        <button id="btnEliminarRepaso">Eliminar a repaso</button>
+        <button id="btnEliminarRepaso">Eliminar de repaso</button>
+        <button id="btnEliminarRegistro">Eliminar registro</button>
         <button id="btnGuardarCambios">Guardar Cambios</button>
     </div>
     
@@ -321,7 +377,7 @@ function eliminaGrupo(indice, grupo) {
             <!-- Las opciones se llenarán dinámicamente -->
         </select>
         <input type="text" id="nuevoGrupoInput" placeholder="Nuevo grupo o seleccione">
-        <button id="btnAñadirNuevoGrupo">Añadir</button>
+        <button id="btnAñadirNuevoGrupo">Añadir al grupo</button>
         <button id="btnEliminarDelGrupo">Eliminar del grupo</button>
 
     </div>
@@ -332,12 +388,20 @@ function eliminaGrupo(indice, grupo) {
 
 let registroActual
 
+//document.getElementById('btnEliminarRegistro').addEventListener('click', eliminarRegistro(registroActual));
+document.getElementById('btnEliminarRegistro').addEventListener('click', function() {
+    eliminarRegistro(registroActual);
+});
 
-document.getElementById('btnGuardarCambios').addEventListener('click', guardarCambios);
+//document.getElementById('btnGuardarCambios').addEventListener('click', guardarCambios);
+document.getElementById('btnGuardarCambios').addEventListener('click', function() {
+    guardarCambios();
+});
+
 
 
 document.getElementById('btnAñadirRepaso').addEventListener('click', function() {
-    if (añadirGrupo(indiceActual, 'repaso')) {
+    if (añadirGrupo(registroActual, 'repaso')) {
         alert('Añadido a repaso'); // Si el grupo fue añadido exitosamente
     } else {
         // Si el registro ya estaba en el grupo o hubo algún otro error
@@ -347,7 +411,7 @@ document.getElementById('btnAñadirRepaso').addEventListener('click', function()
 
 document.getElementById('btnEliminarRepaso').addEventListener('click', function() {
     // Utiliza la función eliminaGrupo para intentar eliminar el registro actual del grupo "repaso"
-    if (eliminaGrupo(indiceActual, 'repaso')) {
+    if (eliminaGrupo(registroActual, 'repaso')) {
         alert('Eliminado del grupo repaso'); // Si el grupo fue eliminado exitosamente
     } else {
         // Si el registro no estaba en el grupo o hubo algún otro error
@@ -358,8 +422,8 @@ document.getElementById('btnEliminarRepaso').addEventListener('click', function(
 
 document.getElementById('btnEliminarDelGrupo').addEventListener('click', function() {
     // Asume que tienes un selector definido en alguna parte de tu HTML para elegir el grupo
-    let grupoSeleccionado = document.getElementById('nuevoGrupoSelect').value; // Asegúrate de que el ID coincida
-    if (eliminaGrupo(indiceActual, grupoSeleccionado)) {
+    let grupoSeleccionado = document.getElementById('nuevoGrupoInput').value; // Asegúrate de que el ID coincida
+    if (eliminaGrupo(registroActual, grupoSeleccionado)) {
         alert('Eliminado del grupo ' + grupoSeleccionado); // Opcional: feedback al usuario
     } else {
         // Muestra un mensaje de error si el registro no se encontraba en el grupo
@@ -371,7 +435,7 @@ document.getElementById('btnAñadirNuevoGrupo').addEventListener('click', functi
     let nuevoGrupo = document.getElementById('nuevoGrupoInput').value.trim();
     if (nuevoGrupo) {
         // La función añadirGrupo ahora devuelve true si el grupo fue añadido con éxito, y false si ya existía
-        if (añadirGrupo(indiceActual, nuevoGrupo)) {
+        if (añadirGrupo(registroActual, nuevoGrupo)) {
             alert('Añadido al grupo ' + nuevoGrupo); // Si el grupo fue añadido exitosamente
         } else {
             // Si el registro ya estaba en el grupo
@@ -383,9 +447,27 @@ document.getElementById('btnAñadirNuevoGrupo').addEventListener('click', functi
 });
 
 
+function mostrarSiguiente() {
+    // obtener un registro aleatorio
+    const enunciadoTextArea = document.getElementById('enunciado');
+    const ejercicio = document.getElementById('ejercicios').value;
+    registroActual = obtenerRegistroAleatorio(ejercicio);
+    enunciadoTextArea.value = registroActual[0];
+ 
+    document.getElementById('responseText').innerText = registroActual[0];
+}
+
 function seleccionarGrupo() {
     const select = document.getElementById('nuevoGrupoSelect');
     const input = document.getElementById('nuevoGrupoInput');
+    if (select.value) {
+        input.value = select.value; // Transfiere el valor seleccionado al input
+    }
+}
+
+function seleccionarNuevoEjercicioGrupo() {
+    const select = document.getElementById('ejercicioNuevoGrupoSelect');
+    const input = document.getElementById('campoGrupo');
     if (select.value) {
         input.value = select.value; // Transfiere el valor seleccionado al input
     }
@@ -397,12 +479,7 @@ document.getElementById('inicioForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
     // obtener un registro aleatorio
-    const enunciadoTextArea = document.getElementById('enunciado');
-    const ejercicio = document.getElementById('ejercicios').value;
-    registroActual = obtenerRegistroAleatorio(ejercicio);
-    enunciadoTextArea.value = registroActual[0];
- 
-    document.getElementById('responseText').innerText = registroActual[0];
+    mostrarSiguiente()
   
 });
 
@@ -422,7 +499,59 @@ document.getElementById('inicioForm').addEventListener('submit', function(e) {
 
 
 <div id="responseText" style="height: 250px; margin-top: 20px; border: 1px solid #ddd; padding: 10px; overflow-y:auto;"></div>
+
+
+<p> AÑADIR UN NUEVO EJERCICIO: </p>
+<div id="nuevoEjercicio">
+    <div>
+        <label for="campoEspañol">Español:</label>
+        <input type="text" id="campoEspañol" name="campoEspañol">
+    </div>
+    <div>
+        <label for="campoIngles">Inglés:</label>
+        <input type="text" id="campoIngles" name="campoIngles">
+    </div>
+    <div>
+        <label for="campoGrupo">Grupo:</label>
+         <select id="ejercicioNuevoGrupoSelect" onchange="seleccionarNuevoEjercicioGrupo()">
+            <!-- Las opciones se llenarán dinámicamente -->
+        </select>        
+        <input type="text" id="campoGrupo" name="campoGrupo">
+        
+    </div>
+    <button id="btnCrearNuevoEjercicio">Crear nuevo ejercicio</button>
+</div>
+
+
 <script>
+
+document.getElementById('btnCrearNuevoEjercicio').addEventListener('click', function() {
+    // Obtiene los valores de los campos de texto
+    const español = document.getElementById('campoEspañol').value.trim();
+    const ingles = document.getElementById('campoIngles').value.trim();
+    
+    const grupo = document.getElementById('campoGrupo').value.trim();
+
+
+    // Valida que los campos no estén vacíos (ajusta según necesidades)
+    if (español && ingles && grupo) {
+        // Inserta los nuevos valores al final del array 'registros'
+        registros.push([español, ingles, grupo]);
+        console.log('Nuevo ejercicio creado:', español, ingles, grupo);
+        console.log('Registros actualizados:', registros);
+
+        // Opcional: Limpia los campos después de la inserción
+        document.getElementById('campoEspañol').value = '';
+        document.getElementById('campoIngles').value = '';
+        document.getElementById('campoGrupo').value = '';
+    } else {
+        // Opcional: Mensaje de error si algún campo está vacío
+        console.error('Todos los campos son requeridos para crear un nuevo ejercicio.');
+        alert('Por favor, rellena todos los campos.');
+    }
+});
+
+
 let recordButton = document.getElementById("recordButton");
 let chunks = [];
 let mediaRecorder;
@@ -469,7 +598,7 @@ function enviarAudioAlServidor(blob) {
     let formData = new FormData();
     formData.append('file', blob, 'grabacion.ogg');
 
-    fetch('http://localhost:5500/transcribe', {
+    fetch('http://localhost:5500/only_transcribe', {
         method: 'POST',
         body: formData,
     })
@@ -534,29 +663,6 @@ function obtenerYReproducir(texto, sol=true) {
 }
 
 
-function obtenerYReproducirAudio(texto, index) {
-    console.log('Obteniendo audio para:', texto, 'índice:', index, 'microsegundos:', Date.now() - milisegundosInicio);
-    fetch('http://localhost:5500/audio', {
-
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ texto: texto })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.audio_base64) {
-            console.log('Enviando audio al buffer de reproducción, tamaño:', data.audio_base64.length, 'índice:', index, 'microsegundos:', Date.now()-milisegundosInicio);
-            addAudioClipToBuffer(data.audio_base64, index);
-        }
-    })
-    .catch(error => {
-        console.error('Error al obtener el audio:', error);
-    });
-}
-
-
 
 
 function playAudio(audioBase64, sol=true) {
@@ -601,8 +707,6 @@ function createAudioPlayerFromBlob(blob) {
     audioContainer.appendChild(audioPlayer);
 }
 
-
-
-
+cargarCSVDesdeServidor()
 
 </script>

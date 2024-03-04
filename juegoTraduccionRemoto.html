@@ -202,6 +202,7 @@ let registros = []; // Almacena aquí todos los registros procesados
     .then(response => response.json())
     .then(data => {
         console.log(data.message); // Mensaje de éxito
+        alert(data.message);
     })
     .catch((error) => {
         console.error('Error:', error); // Manejo de errores
@@ -376,7 +377,7 @@ function arrayToCSVString(arrayDeArrays) {
             <!-- Las opciones se llenarán dinámicamente -->
         </select>
         <input type="text" id="nuevoGrupoInput" placeholder="Nuevo grupo o seleccione">
-        <button id="btnAñadirNuevoGrupo">Añadir</button>
+        <button id="btnAñadirNuevoGrupo">Añadir al grupo</button>
         <button id="btnEliminarDelGrupo">Eliminar del grupo</button>
 
     </div>
