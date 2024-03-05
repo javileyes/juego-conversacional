@@ -138,17 +138,30 @@ def print_strings():
 def get_translations():
     return send_from_directory(directory='.', path='translations.csv', as_attachment=True)
 
+
+
 import csv
 import shutil
-@app.route('/save-translations-file', methods=['POST'])
+# hay algo en la pila de protocolos que impide transferencia de archivos grandes (se guardarán archivos a local) TODO revisar
+@app.route('/save-translations-file', methods=['POST'] )
 def save_translations():
-    data = request.json  # Asume que el cliente envía los datos como JSON
+    print("Guardando archivo de traducciones...", request, "fin de request")
+    try:
+        data = request.json  # Asume que el cliente envía los datos como JSON
+    except Exception as e:
+        print("Error al leer los datos del cuerpo de la solicitud")
+        return jsonify({'error': str(e)}), 500
+    #imprime longitud de data
+    print("Longitud de data:", len(data))
     if not data:
+        print("No data provided in /save-translations-file")
         return jsonify({'error': 'No data provided'}), 400
     
     try:
         # Hace una copia de seguridad del archivo translations.csv antes de modificarlo
+        print("Haciendo copia de seguridad del archivo translations.csv")
         shutil.copy('translations.csv', 'translations.csv.bak')
+        print("Copia de seguridad del archivo translations.csv creada con éxito")
 
         # Abre el archivo translations.csv para escribir y actualiza con los datos recibidos
         with open('translations.csv', mode='w', newline='', encoding='utf-8') as csvfile:
