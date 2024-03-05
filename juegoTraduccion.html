@@ -702,6 +702,8 @@ function updateResponseText(text) {
 
 
 function obtenerYReproducir(texto, sol=true) {
+    if (texto.length < 20) { texto += " . (This phrase was too short)";}
+    else if (texto.length < 25) { texto += " . .";}
     console.log('Obteniendo audio para:', texto);
     fetch('http://localhost:5500/audio', {
 
