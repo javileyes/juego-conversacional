@@ -31,6 +31,10 @@ import sys
 # Verifica si el comando tenía flag -s o --short
 if "-s" in sys.argv or "--short" in sys.argv:
     short_answer = True
+else:
+    short_answer = False
+
+print("short_answer:", short_answer)
 
 traducir = False
 if "-es" in sys.argv:
@@ -42,10 +46,10 @@ args = [arg for arg in sys.argv[1:] if arg not in ["-s", "--short", "-es"]]
 # Asigna los valores a system_prompt y saludo basándose en los argumentos restantes
 if len(args) > 0:
     system_prompt = args[0]
-    # print("SYSTEM PROMPT!!:", system_prompt)
+    print("SYSTEM PROMPT!!:", system_prompt)
 if len(args) > 1:
     saludo = args[1]
-    # print("SALUDO!!:", saludo)
+    print("SALUDO!!:", saludo)
 
 
 if traducir:
