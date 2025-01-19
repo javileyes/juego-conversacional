@@ -39,8 +39,8 @@ import subprocess
 # Definir las variables de entorno y las rutas
 BASE_FOLDER = "./"
 REPO = "QuantFactory"
-TYPE_MODEL = "Meta-Llama-3-8B-Instruct-GGUF"
-MODEL = "Meta-Llama-3-8B-Instruct.Q8_0.gguf"
+TYPE_MODEL = "Meta-Llama-3-70B-Instruct-GGUF"
+MODEL = "Llama3-70B.gguf"
 MODEL_PATH = os.path.join(BASE_FOLDER, MODEL)
 CONTEXT_LENGTH = 8192
 
@@ -789,6 +789,7 @@ def process_text():
 
     if not texto:
         return jsonify(error="Texto vacío o no proporcionado"), 400
+
     # si el idioma es español, traduce la respuesta al español
 
     prompt = f"<|start_header_id|>user<|end_header_id|>\n\n{texto}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"

@@ -38,9 +38,9 @@ import subprocess
 
 # Definir las variables de entorno y las rutas
 BASE_FOLDER = "./"
-REPO = "QuantFactory"
-TYPE_MODEL = "Meta-Llama-3-8B-Instruct-GGUF"
-MODEL = "Meta-Llama-3-8B-Instruct.Q8_0.gguf"
+REPO = "bartowski"
+TYPE_MODEL = "phi-4-GGUF"
+MODEL = "phi-4-Q8_0.gguf"
 MODEL_PATH = os.path.join(BASE_FOLDER, MODEL)
 CONTEXT_LENGTH = 8192
 
@@ -81,6 +81,7 @@ def load_model():
             model_path=MODEL_PATH,
             n_gpu_layers=-1 if enable_gpu else 0,
             n_ctx=CONTEXT_LENGTH,
+            model_type="phi"
             # verbose=False,
         )
         model.verbose=False
@@ -127,7 +128,7 @@ LOGGING = False
 from threading import Lock
 
 # global model
-def encontrar_coincidencia(texto, cadena_busqueda="<|eot_id|>"):
+def encontrar_coincidencia(texto, cadena_busqueda="<|im_end|>"):
     """
     Esta función busca la primera aparición de una cadena de búsqueda en un texto dado y devuelve el substring
     desde el principio del texto hasta el final de esta coincidencia (incluida).
@@ -152,7 +153,7 @@ def encontrar_coincidencia(texto, cadena_busqueda="<|eot_id|>"):
 
 
 # VENTANA DESLIZANTE
-def ajustar_contexto(texto, max_longitud=15000, secuencia="<|start_header_id|>", system_end="<|eot_id|>"):
+def ajustar_contexto(texto, max_longitud=15000, secuencia="<|im_start|>", system_end="<|im_end|>"):
     system_prompt = encontrar_coincidencia(texto, system_end)
     # Comprobar si la longitud del texto es mayor que el máximo permitido
     if len(texto) > max_longitud:
@@ -257,7 +258,7 @@ def generate_in_file_parts(userID, historico, ai, user, input_text, max_addition
             stop.append("\n")
 
 
-        prompt = f"<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n{input_text}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"
+        prompt = f"<|im_end|><|im_start|>user<|im_sep|>\n\n{input_text}<|im_end|><|im_start|>assistant<|im_sep|>\n\n"
 
         final_prompt = historico + "\n" + prompt
 
@@ -318,7 +319,7 @@ def generate_in_file_parts(userID, historico, ai, user, input_text, max_addition
             estado_generacion[userID].parts[indiceParte] = parte_actual
             estado_generacion[userID].top = indiceParte
 
-        all_text = model_inputs + outputs + "<|eot_id|>"
+        all_text = model_inputs + outputs + "<|im_end|>"
         estado_generacion[userID].generando = False
         if LOGGING:
             print(f"generando={estado_generacion[userID].generando}; Respuesta Terminada. El total generado para {user}:", outputs)
@@ -394,7 +395,7 @@ if len(args) > 1:
     saludo = args[1]
 
 
-historico = f"<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n{system_prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n{saludo}<|eot_id|>"
+historico = f"<|im_start|>system<|im_sep|>\n\n{system_prompt}<|im_end|><|im_start|>assistant<|im_sep|>\n\n{saludo}<|im_end|>"
 
 
 # load model
@@ -485,9 +486,9 @@ def print_strings():
     #     historico = f"system\n{system_prompt}\nassistant\n{saludo}\n"
     # elif modelo == "zypher":
     #     historico = f"{system_prompt}</s>\n\n{saludo}</s>\n"
-    historico = f"<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n{system_prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n{saludo}"#<|eot_id|>"
+    historico = f"<|im_start|>system<|im_sep|>\n\n{system_prompt}<|im_end|><|im_start|>assistant<|im_sep|>\n\n{saludo}"#<|im_end|>"
 
-    pre_warm_chat(historico + "<|eot_id|>")
+    pre_warm_chat(historico + "<|im_end|>")
 
     # Retorna una respuesta para indicar que se recibieron y procesaron los datos
     return jsonify({"message": saludo, "historico": historico}), 200
@@ -660,7 +661,7 @@ def transcribe_audio():
     add_audio_to_conversation_async(ogg_filepath)
 
     # La respuesta ya no incluirá 'output' porque se generará en segundo plano
-    prompt = f"<|start_header_id|>user<|end_header_id|>\n\n{transcripcion}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"
+    prompt = f"<|im_start|>user<|im_sep|>\n\n{transcripcion}<|im_end|><|im_start|>assistant<|im_sep|>\n\n"
     historico += prompt    
     return jsonify(entrada=transcripcion, prompt=prompt, entrada_traducida="")
     # return jsonify(entrada=transcripcion, historico=historico, entrada_traducida="")
@@ -791,7 +792,7 @@ def process_text():
         return jsonify(error="Texto vacío o no proporcionado"), 400
     # si el idioma es español, traduce la respuesta al español
 
-    prompt = f"<|start_header_id|>user<|end_header_id|>\n\n{texto}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"
+    prompt = f"<|im_start|>user<|im_sep|>\n\n{texto}<|im_end|><|im_start|>assistant<|im_sep|>\n\n"
     historico += prompt
     return jsonify(entrada=texto, historico=historico, entrada_traducida="")
 
