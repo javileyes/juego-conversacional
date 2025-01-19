@@ -299,19 +299,38 @@ def generate_in_file_parts(userID, historico, ai, user, input_text, max_addition
 
             outputs += trozo
             parte_actual += trozo
-            if trozo in ",;:.?!" and len(parte_actual)>44 or trozo in "." and len(parte_actual)>1:
 
-                if indiceParte == 0: #creamos primer audio rápido para rápida respuesta
-                    estado_generacion[userID].primer_audio = voz_sintetica_english(parte_actual, "true")
-                    
-                estado_generacion[userID].parts[indiceParte] = parte_actual
-                estado_generacion[userID].top = indiceParte
-                if LOGGING:
-                    print(f"trozo generado para USER: {userID}:", parte_actual)
-                    print("se ha generado para entrada de indiceParte (ahora TOP tb vale esto):", indiceParte)
-                indiceParte += 1                
-                # print("se incrementa indiceParte (pero TOP aun no) a:", indiceParte)
-                parte_actual = ""
+            minimo_caracteres = 44
+            if idioma == "es":
+                # minimo_caracteres = 54
+                if trozo in ",;:.?!" and len(parte_actual)> minimo_caracteres and trozo in "." and len(parte_actual)>1:
+
+                    if indiceParte == 0: #creamos primer audio rápido para rápida respuesta
+                        estado_generacion[userID].primer_audio = voz_sintetica_english(parte_actual, "true")
+                        
+                    estado_generacion[userID].parts[indiceParte] = parte_actual
+                    estado_generacion[userID].top = indiceParte
+                    if LOGGING:
+                        print(f"trozo generado para USER: {userID}:", parte_actual)
+                        print("se ha generado para entrada de indiceParte (ahora TOP tb vale esto):", indiceParte)
+                    indiceParte += 1                
+                    # print("se incrementa indiceParte (pero TOP aun no) a:", indiceParte)
+                    parte_actual = ""                
+
+            else:
+                if trozo in ",;:.?!" and len(parte_actual)> minimo_caracteres or trozo in "." and len(parte_actual)>1:
+
+                    if indiceParte == 0: #creamos primer audio rápido para rápida respuesta
+                        estado_generacion[userID].primer_audio = voz_sintetica_english(parte_actual, "true")
+                        
+                    estado_generacion[userID].parts[indiceParte] = parte_actual
+                    estado_generacion[userID].top = indiceParte
+                    if LOGGING:
+                        print(f"trozo generado para USER: {userID}:", parte_actual)
+                        print("se ha generado para entrada de indiceParte (ahora TOP tb vale esto):", indiceParte)
+                    indiceParte += 1                
+                    # print("se incrementa indiceParte (pero TOP aun no) a:", indiceParte)
+                    parte_actual = ""
 
 
         if len(parte_actual)>1:
@@ -778,7 +797,7 @@ def process_text():
         print("Histórico antes de actualizar:", historico)
         print("Prompt generado:", prompt)
         print("Histórico después de actualizar:", historico)
-        
+
     # Utiliza la variable 'idioma' declarada globalmente
     global idioma
 
@@ -1007,7 +1026,7 @@ elif idioma == "es":
     def voz_sintetica_spanish(text):
         text = preprocesado_al_modelo(text)
 
-        lista_dividida = dividir_texto_con_minimo_palabras(text)
+        lista_dividida = dividir_texto_con_minimo_palabras(text, min_palabras=13)
 
         audios_temporales = []
 
@@ -1069,17 +1088,19 @@ def primer_audio():
 
     userID = request.args.get('userID', default=0, type=int)
    
-    if idioma == "en":
-        while estado_generacion[userID].primer_audio == "wait":
-            time.sleep(0.1)
-            if LOGGING:
-                print("esperando primer audio")
-        audio_base64 = estado_generacion[userID].primer_audio
+    # if idioma == "en":
+    while estado_generacion[userID].primer_audio == "wait":
+        time.sleep(0.1)
+        if LOGGING:
+            print("esperando primer audio")
+    audio_base64 = estado_generacion[userID].primer_audio
         # print('RECUPERANDO PRIMER AUDIO!!!!!!!!:', audio_base64)
-        return jsonify(audio_base64=audio_base64)
-    elif idioma == "es":
-        audio_base64 = voz_sintetica_spanish(texto)
-        return jsonify(audio_base64=audio_base64)
+        # return jsonify(audio_base64=audio_base64)
+    # elif idioma == "es":
+        # audio_base64 = voz_sintetica_spanish(texto)
+        
+        
+    return jsonify(audio_base64=audio_base64)
 
 
 import io
