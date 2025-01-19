@@ -3,3 +3,4 @@ neo4j/
 error.txt
 log.txt
 __pycache__/
+Meta-Llama-3-8B-Instruct.Q8_0.gguf
