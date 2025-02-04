@@ -336,6 +336,8 @@ def generate_in_file_parts(userID, historico, ai, user, input_text, max_addition
 
         if len(parte_actual)>1:
             # printf(HISTORICO_LOG, f"trozo ÚLTIMO generado para USER: {userID}:", parte_actual)
+            if indiceParte == 0: #creamos primer audio rápido para rápida respuesta
+                estado_generacion[userID].primer_audio = voz_sintetica_english(parte_actual, "true")
             estado_generacion[userID].parts[indiceParte] = parte_actual
             estado_generacion[userID].top = indiceParte
             indiceParte += 1
@@ -910,8 +912,10 @@ elif idioma == "es":
         '-': ',',
         '—': ',',
         '\n': ' ',
+        '\\n': ' ',
         'web': 'güeb',
         'CMS': 'sistema de gestión de contenidos',
+        'DNS': 'sistema de nombres de dominio',
         'HTML': 'hache te eme ele',
         'SMTP': 'ese eme te pe',
         'CSS': 'ce ese ese',
