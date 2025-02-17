@@ -803,6 +803,10 @@ def primer_audio():
 
 import io
 import soundfile as sf
+import base64
+import os
+import numpy as np
+import tempfile
 
 
 def add_comma_after_punctuation(text: str) -> str:
@@ -820,25 +824,6 @@ def add_comma_after_punctuation(text: str) -> str:
 #modified_text = add_comma_after_punctuation(example_text)
 #print(modified_text)
 
-import io
-import base64
-import soundfile as sf
-import os
-import threading
-from pydub import AudioSegment
-import subprocess
-
-
-def add_silence_to_audio(audio_path, duration_ms=3000):
-    """Añade un segmento de silencio al final de un archivo de audio."""
-    # Carga el audio
-    sound = AudioSegment.from_wav(audio_path)
-    # Genera el silencio
-    silence = AudioSegment.silent(duration=duration_ms)
-    # Concatena el audio con el silencio
-    combined = sound + silence
-    # Guarda el nuevo archivo
-    combined.export(audio_path, format='wav')
 
 
 from kokoro import KPipeline  # Asegúrate de tener instalado el paquete kokoro
@@ -859,10 +844,8 @@ def voz_sintetica_english(texto):
       - Une los segmentos en un solo audio.
       - Guarda el audio en un archivo temporal, lo envía al proceso de adición a la conversación y lo retorna codificado en base64.
     """
-    import numpy as np
-    import tempfile
-    import base64
-    import soundfile as sf
+
+
     
     global pipeline    
 
