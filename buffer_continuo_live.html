@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Cliente de Audio Simplificado</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #recordButton {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      padding: 15px;
+      font-size: 40px;
+      border-radius: 5px;
+      cursor: pointer;
+      width: 100%;
+      height: 300px;
+      display: block;
+      margin: 0 auto;
+    }
+    #recordButton:hover { background-color: #d32f2f; }
+    #responseText {
+      margin-top: 20px;
+      border: 1px solid #ddd;
+      padding: 10px;
+      height: 800px;
+      overflow-y: auto;
+      background-color: #f9f9f9;
+      font-size: 36px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div id="responseText"></div>
+  <button id="recordButton">Pulsa para grabar/detener</button>
+
+  <script>
+    let historico = "";
+    const userID = Math.floor(Math.random() * 999999);
+    const URL = 'https://javiergimenez.es/api';
+
+    // --------------------------
+    // Reproducción con Web Audio API (contexto exclusivo)
+    // --------------------------
+    const playbackContext = new (window.AudioContext || window.webkitAudioContext)();
+    let audioQueue = [];
+    let isPlaying = false;
+
+    // Función para convertir base64 a ArrayBuffer
+    function base64ToArrayBuffer(base64) {
+      const binaryString = window.atob(base64);
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      return bytes.buffer;
+    }
+
+    // Agrega un clip de audio a la cola y, si no se está reproduciendo, lo inicia
+    function addAudioClipToQueue(base64Audio) {
+      audioQueue.push(base64Audio);
+      if (!isPlaying) {
+        playNextAudioFromQueue();
+      }
+    }
+
+    // Reproduce el siguiente audio de la cola usando el AudioContext exclusivo
+    function playNextAudioFromQueue() {
+      if (audioQueue.length > 0) {
+        if (playbackContext.state !== 'running') {
+          playbackContext.resume().then(() => {
+            actuallyPlayNext();
+          });
+        } else {
+          actuallyPlayNext();
+        }
+      } else {
+        isPlaying = false;
+      }
+    }
+
+    function actuallyPlayNext() {
+      isPlaying = true;
+      const base64Audio = audioQueue.shift();
+      const arrayBuffer = base64ToArrayBuffer(base64Audio);
+      playbackContext.decodeAudioData(
+        arrayBuffer,
+        (audioBuffer) => {
+          const source = playbackContext.createBufferSource();
+          source.buffer = audioBuffer;
+          source.connect(playbackContext.destination);
+          source.onended = () => {
+            playNextAudioFromQueue();
+          };
+          source.start(0);
+        },
+        (err) => {
+          console.error("Error al decodificar audio:", err);
+          playNextAudioFromQueue();
+        }
+      );
+    }
+
+    // --------------------------
+    // Grabación de audio: mantener el stream activo para evitar reconfiguración
+    // --------------------------
+    const recordButton = document.getElementById("recordButton");
+    let chunks = [];
+    let mediaRecorder;
+    let isRecording = false;
+    let recordingStream = null;
+
+    // Se solicita el stream una sola vez al cargar la página
+    async function initRecordingStream() {
+      try {
+        recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (error) {
+        console.error("Error al inicializar el stream de grabación:", error);
+      }
+    }
+    initRecordingStream();
+
+    // Usa el stream ya obtenido en lugar de solicitar uno nuevo cada vez
+    function startRecording() {
+      if (!recordingStream) {
+        console.error("No se pudo obtener el stream de grabación.");
+        return;
+      }
+      try {
+        mediaRecorder = new MediaRecorder(recordingStream);
+        mediaRecorder.ondataavailable = event => {
+          chunks.push(event.data);
+        };
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' });
+          enviarAudioAlServidor(blob);
+          chunks = [];
+          // Importante: no detenemos el stream para evitar reconfigurar el audio.
+        };
+        mediaRecorder.start();
+        isRecording = true;
+        recordButton.textContent = 'Grabando...';
+      } catch (error) {
+        console.error('Error al iniciar la grabación:', error);
+      }
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+      }
+      isRecording = false;
+      recordButton.textContent = 'Pulsa para grabar/detener';
+    }
+
+    recordButton.onclick = () => {
+      if (!isRecording) {
+        startRecording();
+      } else {
+        stopRecording();
+      }
+    };
+
+    // --------------------------
+    // Manejo de transcripción y actualización de texto
+    // --------------------------
+    let nextPartIndex = 0;
+
+    async function enviarAudioAlServidor(blob) {
+      const formData = new FormData();
+      formData.append('file', blob, 'grabacion.ogg');
+      formData.append('historico', historico);
+      formData.append('userID', userID);
+      try {
+        const response = await fetch(URL + '/transcribe', {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await response.json();
+        updateResponseText(
+          "************** ME: **************\n" +
+          data.entrada + "\n" +
+          "********** RESPONSE: **********\n"
+        );
+        historico += data.prompt;
+        updateResponseText(data.prompt + "\n");
+        await obtenerPartes();
+      } catch (error) {
+        console.error('Error al enviar el audio:', error);
+        alert("Error al enviar el audio al servidor.");
+      }
+    }
+
+    function updateResponseText(text) {
+      const responseDiv = document.getElementById('responseText');
+      responseDiv.innerText += text;
+      responseDiv.scrollTop = responseDiv.scrollHeight;
+    }
+
+    // Solicita los segmentos nuevos a partir de nextPartIndex y actualiza el índice global
+    async function obtenerPartes() {
+      if (nextPartIndex === 0) {
+        const response_audio = await fetch(`${URL}/primer_audio?userID=${userID}`);
+        const data_audio = await response_audio.json();
+        if (data_audio.audio_base64) {
+          addAudioClipToQueue(data_audio.audio_base64);
+        }
+      }
+      let indice = nextPartIndex;
+      let hayMas = true;
+      while (hayMas) {
+        const response = await fetch(`${URL}/get_next_part?index=${indice}&userID=${userID}`);
+        const partData = await response.json();
+        if (partData.output !== "") {
+          let trozo = partData.output;
+          updateResponseText(trozo + "\n");
+          historico += trozo;
+          if (indice > 0) {
+            await obtenerYReproducirAudio(trozo, indice);
+          }
+          indice++;
+        } else {
+          hayMas = false;
+        }
+      }
+      nextPartIndex = indice;
+    }
+
+    async function obtenerYReproducirAudio(texto, index) {
+      try {
+        const response = await fetch(URL + '/audio', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ texto: texto, pausa: 'true' })
+        });
+        const data = await response.json();
+        if (data.audio_base64) {
+          addAudioClipToQueue(data.audio_base64);
+        }
+      } catch (error) {
+        console.error('Error al obtener el audio:', error);
+      }
+    }
+  </script>
+</body>
+</html>
