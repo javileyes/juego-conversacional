@@ -161,64 +161,7 @@ estado_generacion = {}
 estado_generacion['anonimo'] = EstadoGeneracion()
 
 import re
-# def generate_in_file_parts(userID, phistorico, ai, user, input_text, max_additional_tokens=2000):
-#     global estado_generacion
-#     printf(HISTORICO_LOG, f"generando para USER:{userID}\nhistorico:{phistorico}\ninput_text:{input_text}")
-#     if userID not in estado_generacion:
-#         estado_generacion[userID] = EstadoGeneracion()
-#     estado_generacion[userID].generando = True
-#     with generate_lock:
-#         estado_generacion[userID].top = -1
-#         print(f"Empezamos a generar para USER:{userID} con entrada:", input_text)
-#         indiceParte = 0
-#         parte_actual = ""
-#         prompt = f"</s>[INST]{input_text}[/INST]"
-#         final_prompt = estado_generacion[userID].historico + prompt
-#         model_inputs = final_prompt
-#         outputs = ""
-#         print(f"{ai}:", end="")
-#         colchon = (CONTEXT_LENGTH - max_additional_tokens) * 3
-#         if len(final_prompt) > colchon:
-#             print("Ajustando contexto!!!")
-#             final_prompt = ajustar_contexto(final_prompt, max_longitud=colchon)
-#             print(final_prompt)
-#         response = model(prompt=final_prompt, max_tokens=max_additional_tokens, temperature=0, top_p=1,
-#                          top_k=0, repeat_penalty=1, stream=True)
-#         respuesta = ""
-#         estado_generacion[userID].primer_audio = "wait"
-#         for chunk in response:
-#             trozo = chunk['choices'][0]['text']
-#             respuesta += trozo
-#             print(trozo, end="", flush=True)
-#             outputs += trozo
-#             parte_actual += trozo
-#             minimo_caracteres = 34
-#             if (trozo in ",;:.?!" and len(parte_actual) > minimo_caracteres) or (trozo in "." and len(parte_actual) > 1):
-#                 parte_actual = re.sub(r'\\{2,}', r'\\', parte_actual)
-#                 parte_actual = parte_actual.replace('\\"', '"').replace("\\n", "\n")
-#                 if indiceParte == 0:
-#                     estado_generacion[userID].primer_audio = voz_sintetica_english(parte_actual)
-#                 estado_generacion[userID].parts[indiceParte] = parte_actual
-#                 estado_generacion[userID].top = indiceParte
-#                 if LOGGING:
-#                     print(f"trozo generado para USER: {userID}:", parte_actual)
-#                     print("se ha generado para entrada de indiceParte (ahora TOP tb vale esto):", indiceParte)
-#                 indiceParte += 1                
-#                 parte_actual = ""
-#         if len(parte_actual) > 1:
-#             parte_actual = re.sub(r'\\{2,}', r'\\', parte_actual)
-#             parte_actual = parte_actual.replace('\\"', '"').replace("\\n", "\n")
-#             if indiceParte == 0:
-#                 estado_generacion[userID].primer_audio = voz_sintetica_english(parte_actual)
-#             estado_generacion[userID].parts[indiceParte] = parte_actual
-#             estado_generacion[userID].top = indiceParte
-#             indiceParte += 1
-#             parte_actual = ""
-#         all_text = model_inputs + outputs + "</s>"
-#         estado_generacion[userID].generando = False
-#         if LOGGING:
-#             print(f"generando={estado_generacion[userID].generando}; Respuesta Terminada. El total generado para {user}:", outputs)
-#         return all_text, outputs
+
 
 #########################################
 #### NUEVA FUNCIÓN: Segmentación del texto transcrito
@@ -238,21 +181,17 @@ def segment_transcribed_text(userID, text, min_length=34):
     for char in text:
         parte_actual += char
         if char in ",;:.?!" and len(parte_actual) > min_length:
-            cleaned = re.sub(r'\\{2,}', r'\\', parte_actual)
-            cleaned = cleaned.replace('\\"', '"').replace("\\n", "\n")
             if indiceParte == 0:
                 # Genera el primer audio para respuesta rápida
-                estado_generacion[userID].primer_audio = voz_sintetica_english(cleaned)
-            estado_generacion[userID].parts[indiceParte] = cleaned
+                estado_generacion[userID].primer_audio = voz_sintetica_english(parte_actual)
+            estado_generacion[userID].parts[indiceParte] = parte_actual
             estado_generacion[userID].top = indiceParte
             indiceParte += 1
             parte_actual = ""
     if len(parte_actual) > 1:
-        cleaned = re.sub(r'\\{2,}', r'\\', parte_actual)
-        cleaned = cleaned.replace('\\"', '"').replace("\\n", "\n")
         if indiceParte == 0:
-            estado_generacion[userID].primer_audio = voz_sintetica_english(cleaned)
-        estado_generacion[userID].parts[indiceParte] = cleaned
+            estado_generacion[userID].primer_audio = voz_sintetica_english(parte_actual)
+        estado_generacion[userID].parts[indiceParte] = parte_actual
         estado_generacion[userID].top = indiceParte
 
 #########################################
@@ -343,7 +282,7 @@ def print_strings():
     if userID not in estado_generacion:
         estado_generacion[userID] = EstadoGeneracion()
     estado_generacion[userID].historico = f"[SYSTEM_PROMPT]{system_prompt}[/SYSTEM_PROMPT][INST]Espero un saludo[/INST]{saludo}"
-    pre_warm_chat(estado_generacion[userID].historico + "</s>")
+    # pre_warm_chat(estado_generacion[userID].historico + "</s>")
     return jsonify({"message": saludo, "historico": estado_generacion[userID].historico, "userID": userID}), 200
 
 @app.route('/get-translations-file', methods=['GET'])
@@ -414,16 +353,6 @@ def add_audio_to_conversation_async(source_path, convert_to_mp3=False):
     thread = threading.Thread(target=task)
     thread.start()
 
-# def generate_chat_background(userID, entrada, phistorico, ai, user):
-#     global estado_generacion
-#     if LOGGING:
-#         print("generate_chat_background USERID:", userID, "entrada:", entrada)
-#     start_generation_time = time.time()
-#     estado_generacion[userID].historico, output_local = generate_in_file_parts(userID, phistorico, ai, user, input_text=entrada, max_additional_tokens=2048)
-#     end_generation_time = time.time()
-#     generation_duration = end_generation_time - start_generation_time
-#     if LOGGING:
-#         print(f"Generación completada en {generation_duration} segundos")
 
 @app.route('/transcribe', methods=['POST'])
 def transcribe_audio():
@@ -472,6 +401,7 @@ def transcribe_audio():
 
     # Si el idioma detectado es español, se traduce a inglés.
     # Si es inglés, se traduce a español.
+    traduccion = ""
     if detected_lang == "es":
         idioma = "en"
         traduccion = translate_text_to_english(transcripcion)
